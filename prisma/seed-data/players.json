@@ -1,0 +1,595 @@
+{
+  "accounts": [
+    {
+      "password": "123456",
+      "user": {
+        "id": "studio-001",
+        "name": "Blackstar games",
+        "email": "studio@orbitplay.com",
+        "role": "STUDIO",
+        "status": "ACTIVE",
+        "createdAt": "2026-01-15T10:00:00.000Z",
+        "studio": {
+          "organization": "Blackstar games",
+          "cnpj": "12.345.678/0001-90",
+          "website": "https://blackstargames.gg",
+          "totalGames": 2,
+          "balance": 1250000
+        }
+      }
+    },
+    {
+      "password": "123456",
+      "user": {
+        "id": "player-001",
+        "name": "Guilherme Hoffmann",
+        "email": "player@orbitplay.com",
+        "role": "PLAYER",
+        "status": "ACTIVE",
+        "createdAt": "2026-03-08T19:30:00.000Z",
+        "player": {
+          "level": 14,
+          "xp": 4500,
+          "xpToNextLevel": 5000,
+          "balance": 18045,
+          "pendingBalance": 15000,
+          "completedSessions": 32,
+          "rating": 9.8,
+          "rankPosition": 14,
+          "badges": [
+            "ach-001",
+            "ach-002",
+            "ach-004"
+          ],
+          "tier": "ELITE",
+          "achievementsCount": 144,
+          "hoursPlayed": 588
+        }
+      }
+    }
+  ],
+  "achievements": [
+    {
+      "id": "ach-001",
+      "name": "Primeira Sessão",
+      "description": "Concluiu o primeiro playtest na plataforma.",
+      "icon": "sparkles",
+      "xp": 50,
+      "unlockedAt": "2026-03-09T21:10:00.000Z"
+    },
+    {
+      "id": "ach-002",
+      "name": "Caçador de Bugs",
+      "description": "Reportou 10 bugs reproduzíveis validados por um estúdio.",
+      "icon": "bug",
+      "xp": 250,
+      "unlockedAt": "2026-05-22T20:45:00.000Z"
+    },
+    {
+      "id": "ach-003",
+      "name": "Maratonista",
+      "description": "Acumulou 20 horas de sessões gravadas.",
+      "icon": "timer",
+      "xp": 300
+    },
+    {
+      "id": "ach-004",
+      "name": "Feedback de Ouro",
+      "description": "Recebeu nota 5,0 de qualidade em 5 sessões seguidas.",
+      "icon": "award",
+      "xp": 400,
+      "unlockedAt": "2026-07-14T22:05:00.000Z"
+    },
+    {
+      "id": "ach-005",
+      "name": "Voz Ativa",
+      "description": "Gravou 10 sessões com narração em voz alta.",
+      "icon": "mic",
+      "xp": 200
+    },
+    {
+      "id": "ach-006",
+      "name": "Explorador",
+      "description": "Testou jogos de 5 gêneros diferentes.",
+      "icon": "compass",
+      "xp": 350
+    }
+  ],
+  "participations": [
+    {
+      "id": "part-001",
+      "testId": "test-001",
+      "gameId": "game-001",
+      "gameName": "Racha de Rua",
+      "thumbnailUrl": "/assets/images/racha-de-rua.svg",
+      "status": "IN_PROGRESS",
+      "rewardCents": 15000,
+      "rewardStatus": "PENDING",
+      "xpEarned": 0,
+      "startedAt": "2026-09-02T20:10:00.000Z"
+    },
+    {
+      "id": "part-002",
+      "testId": "test-005",
+      "gameId": "game-001",
+      "gameName": "Racha de Rua",
+      "thumbnailUrl": "/assets/images/racha-de-rua.svg",
+      "status": "COMPLETED",
+      "rewardCents": 10000,
+      "rewardStatus": "PAID",
+      "xpEarned": 120,
+      "startedAt": "2026-07-10T18:00:00.000Z",
+      "finishedAt": "2026-07-10T18:31:00.000Z",
+      "durationSeconds": 1860
+    },
+    {
+      "id": "part-003",
+      "testId": "test-003",
+      "gameId": "game-002",
+      "gameName": "Island Explorer",
+      "thumbnailUrl": "/assets/images/island-explorer.svg",
+      "status": "PENDING_REVIEW",
+      "rewardCents": 12000,
+      "rewardStatus": "PENDING",
+      "xpEarned": 140,
+      "startedAt": "2026-08-29T21:00:00.000Z",
+      "finishedAt": "2026-08-29T21:22:00.000Z",
+      "durationSeconds": 1320
+    }
+  ],
+  "earnings": [
+    {
+      "label": "Abr",
+      "amountCents": 32000,
+      "sessions": 3
+    },
+    {
+      "label": "Mai",
+      "amountCents": 58000,
+      "sessions": 5
+    },
+    {
+      "label": "Jun",
+      "amountCents": 41000,
+      "sessions": 4
+    },
+    {
+      "label": "Jul",
+      "amountCents": 76000,
+      "sessions": 6
+    },
+    {
+      "label": "Ago",
+      "amountCents": 93000,
+      "sessions": 8
+    },
+    {
+      "label": "Set",
+      "amountCents": 15000,
+      "sessions": 1
+    }
+  ],
+  "playerDashboard": {
+    "ongoing": {
+      "gameId": "game-101",
+      "tracks": [
+        {
+          "id": "pista-1",
+          "name": "Pista DEV TESTE00...",
+          "progress": 0.57,
+          "rewardCents": 50
+        },
+        {
+          "id": "pista-2",
+          "name": "Pista terra",
+          "progress": 0.12,
+          "rewardCents": 155
+        }
+      ]
+    },
+    "featuredGameIds": [
+      "game-102",
+      "game-103",
+      "game-104",
+      "game-105"
+    ],
+    "earnings": {
+      "last7DaysCents": 2111,
+      "totalCents": 4869,
+      "nextPayoutDays": 3,
+      "series": [
+        {
+          "label": "Seg",
+          "cents": 180
+        },
+        {
+          "label": "Ter",
+          "cents": 420
+        },
+        {
+          "label": "Qua",
+          "cents": 260
+        },
+        {
+          "label": "Qui",
+          "cents": 510
+        },
+        {
+          "label": "Sex",
+          "cents": 340
+        },
+        {
+          "label": "Sáb",
+          "cents": 260
+        },
+        {
+          "label": "Dom",
+          "cents": 141
+        }
+      ]
+    },
+    "missions": {
+      "rankPosition": 14,
+      "rankDelta": 3,
+      "pending": 7,
+      "nextGoalCents": 590,
+      "genres": [
+        {
+          "label": "Puzzle",
+          "value": 26
+        },
+        {
+          "label": "FPD",
+          "value": 22
+        },
+        {
+          "label": "RPG",
+          "value": 20
+        },
+        {
+          "label": "MOBA",
+          "value": 18
+        },
+        {
+          "label": "TPS",
+          "value": 14
+        }
+      ]
+    },
+    "myTests": [
+      {
+        "id": "mt-1",
+        "name": "Mombo Quest",
+        "progress": 0.57,
+        "rewardCents": 55
+      },
+      {
+        "id": "mt-2",
+        "name": "171",
+        "progress": 1,
+        "rewardCents": 55
+      },
+      {
+        "id": "mt-3",
+        "name": "DragonFable",
+        "progress": 0.21,
+        "rewardCents": 55
+      },
+      {
+        "id": "mt-4",
+        "name": "Feelings",
+        "progress": 0,
+        "rewardCents": 55
+      },
+      {
+        "id": "mt-5",
+        "name": "Feelings 2",
+        "progress": 0,
+        "rewardCents": 55
+      }
+    ]
+  },
+  "gameTests": {
+    "game-101": [
+      {
+        "id": "gt-1",
+        "name": "Pista São Paulo v1.3",
+        "kind": "DEMO ABERTA",
+        "kindTone": "topaz",
+        "expiresAt": "2026-09-06T18:04:59.560Z",
+        "estimatedMinutes": 5,
+        "slotsTaken": 24,
+        "slotsTotal": 50,
+        "progress": 0,
+        "rewardCents": 55,
+        "action": "START"
+      },
+      {
+        "id": "gt-2",
+        "name": "Pista Terra v1.3",
+        "kind": "DEMO ABERTA",
+        "kindTone": "topaz",
+        "expiresAt": "2026-09-06T18:04:59.561Z",
+        "estimatedMinutes": 20,
+        "slotsTaken": 21,
+        "slotsTotal": 100,
+        "progress": 1,
+        "rewardCents": 250,
+        "action": "REVIEW"
+      },
+      {
+        "id": "gt-3",
+        "name": "Teste Pointer GSX 2",
+        "kind": "DEMO ABERTA",
+        "kindTone": "topaz",
+        "expiresAt": "2026-09-05T17:14:40.561Z",
+        "estimatedMinutes": 20,
+        "slotsTaken": 21,
+        "slotsTotal": 100,
+        "progress": 0.57,
+        "rewardCents": 250,
+        "action": "CONTINUE"
+      },
+      {
+        "id": "gt-4",
+        "name": "Teste Pista Shangai v2.9",
+        "kind": "DEMO ABERTA",
+        "kindTone": "topaz",
+        "expiresAt": "2026-09-05T16:27:06.561Z",
+        "estimatedMinutes": 15,
+        "slotsTaken": 67,
+        "slotsTotal": 100,
+        "progress": 0,
+        "rewardCents": 900,
+        "boosted": true,
+        "action": "DOWNLOADING"
+      },
+      {
+        "id": "gt-5",
+        "name": "Teste Visual Boss 3",
+        "kind": "A/B",
+        "kindTone": "amethyst",
+        "expiresAt": "2026-09-06T18:04:59.561Z",
+        "estimatedMinutes": 5,
+        "slotsTaken": 24,
+        "slotsTotal": 50,
+        "progress": 0,
+        "rewardCents": 55,
+        "action": "START"
+      },
+      {
+        "id": "gt-6",
+        "name": "HUD Mobile v2",
+        "kind": "Qualitativo",
+        "kindTone": "sapphire",
+        "expiresAt": "2026-09-06T18:04:59.561Z",
+        "estimatedMinutes": 5,
+        "slotsTaken": 9,
+        "slotsTotal": 15,
+        "progress": 0,
+        "rewardCents": 45,
+        "action": "UNAVAILABLE"
+      }
+    ]
+  },
+  "sessionReview": {
+    "id": "88565",
+    "gameId": "game-101",
+    "testName": "Pista São Paulo v1.3",
+    "testKind": "DEMO ABERTA",
+    "rewardCents": 250,
+    "testsDone": 4,
+    "transcript": [
+      {
+        "at": "00:21",
+        "text": "Ok… acho que esse salto era pra ser mais intuitivo. Demorei um pouco pra entender o timing."
+      },
+      {
+        "at": "01:46",
+        "text": "Travou tudo aqui… tive que frear do nada. Achei que o jogo tinha congelado."
+      },
+      {
+        "at": "02:12",
+        "text": "Caramba, essa curva é muito boa! Dá uma sensação de velocidade absurda."
+      },
+      {
+        "at": "05:15",
+        "text": "Tá difícil demais pra uma corrida inicial. Acho que isso podia ser mais suave no começo."
+      },
+      {
+        "at": "05:58",
+        "text": "O som do motor tá legal, mas quando eu bato ele some por um segundo."
+      },
+      {
+        "at": "07:45",
+        "text": "Bati em algo invisível? Não vi nada na pista."
+      },
+      {
+        "at": "09:32",
+        "text": "Já tô meio cansado… talvez a corrida esteja longa demais."
+      },
+      {
+        "at": "10:37",
+        "text": "No geral é bem divertido. Se ajustar essas coisas, fica excelente."
+      }
+    ]
+  },
+  "sessionOutcome": {
+    "gameName": "Horizon chase 2",
+    "gameId": "game-101",
+    "achievements": [
+      {
+        "id": "oc-1",
+        "name": "Primeira Largada",
+        "description": "Complete seu primeiro teste de Horizon Chase 2."
+      },
+      {
+        "id": "oc-2",
+        "name": "Corrida que Paga",
+        "description": "Ganhe seu primeiro pagamento testando Horizon Chase 2."
+      },
+      {
+        "id": "oc-3",
+        "name": "Piloto Frequente 5/10",
+        "description": "Complete 10 testes do jogo."
+      }
+    ],
+    "feedbackQuality": {
+      "total": 9.1,
+      "lines": [
+        "Bônus por feedback completo: +5"
+      ]
+    },
+    "level": {
+      "from": 14,
+      "to": 15,
+      "gainedXp": 60,
+      "progress": 0.42,
+      "lines": [
+        "XP base: 50",
+        "Bônus por feedback completo: +5",
+        "Bônus por bug reportado: +5"
+      ]
+    },
+    "reward": {
+      "totalCents": 55,
+      "lines": [
+        "Crédito base: R$ 0,45",
+        "Bônus por feedback completo: +R$ 0,05",
+        "Bônus por bug reportado: +R$ 0,05"
+      ]
+    }
+  },
+  "gameAchievements": [
+    {
+      "id": "conq-1",
+      "title": "Primeira Largada",
+      "description": "Complete seu primeiro teste de Horizon Chase 2.",
+      "icon": "primeira-largada",
+      "locked": false
+    },
+    {
+      "id": "conq-2",
+      "title": "Piloto Frequente",
+      "description": "Complete 10 testes do jogo.",
+      "icon": "piloto-frequente",
+      "locked": false
+    },
+    {
+      "id": "conq-3",
+      "title": "Crítico Construtivo",
+      "description": "Envie um feedback detalhado com mais de 100 caracteres.",
+      "icon": "critico-construtivo",
+      "locked": false
+    },
+    {
+      "id": "conq-4",
+      "title": "Caçador de Bugs",
+      "description": "Reporte um bug confirmado pelo estúdio.",
+      "icon": "cacador-de-bugs",
+      "locked": false
+    },
+    {
+      "id": "conq-5",
+      "title": "Fonte Primária",
+      "description": "Seus dados foram usados em um insight de IA do estúdio.",
+      "icon": "fonte-primaria",
+      "locked": false
+    },
+    {
+      "id": "conq-6",
+      "title": "Top 10% da Galáxia",
+      "description": "Fique entre os 10% melhores tempos do teste.",
+      "icon": "top-10",
+      "locked": true
+    },
+    {
+      "id": "conq-7",
+      "title": "Teste Persistente",
+      "description": "Testou a mesma pista em 3 versões diferentes.",
+      "icon": "teste-persistente",
+      "locked": false
+    },
+    {
+      "id": "conq-8",
+      "title": "Cobaia de Protótipo",
+      "description": "Jogou uma build experimental.",
+      "icon": "cobaia-de-prototipo",
+      "locked": false
+    },
+    {
+      "id": "conq-9",
+      "title": "Corrida que Paga",
+      "description": "Ganhe seu primeiro pagamento testando Horizon Chase 2.",
+      "icon": "corrida-que-paga",
+      "locked": false
+    }
+  ],
+  "gameMyTests": [
+    {
+      "id": "meu-1",
+      "name": "Pista São Paulo v1.3",
+      "kind": "DEMO ABERTA",
+      "kindTone": "topaz",
+      "expiresAt": "2026-09-07T00:26:39.914Z",
+      "estimatedMinutes": 20,
+      "slotsTaken": 4,
+      "slotsTotal": 100,
+      "progress": 1,
+      "rewardCents": 250,
+      "status": "Completo! (Em análise)"
+    },
+    {
+      "id": "meu-2",
+      "name": "Pista São Paulo v1.3",
+      "kind": "DEMO ABERTA",
+      "kindTone": "topaz",
+      "expiresAt": null,
+      "estimatedMinutes": 20,
+      "slotsTaken": 4,
+      "slotsTotal": 100,
+      "progress": 1,
+      "rewardCents": 250,
+      "status": "Completo!"
+    },
+    {
+      "id": "meu-3",
+      "name": "Pista São Paulo v1.3",
+      "kind": "DEMO ABERTA",
+      "kindTone": "topaz",
+      "expiresAt": null,
+      "estimatedMinutes": 20,
+      "slotsTaken": 4,
+      "slotsTotal": 100,
+      "progress": 1,
+      "rewardCents": 250,
+      "status": "Completo!"
+    },
+    {
+      "id": "meu-4",
+      "name": "Pista São Paulo v1.3",
+      "kind": "DEMO ABERTA",
+      "kindTone": "topaz",
+      "expiresAt": null,
+      "estimatedMinutes": 20,
+      "slotsTaken": 4,
+      "slotsTotal": 100,
+      "progress": 1,
+      "rewardCents": 250,
+      "status": "Completo!"
+    },
+    {
+      "id": "meu-5",
+      "name": "Pista São Paulo v1.3",
+      "kind": "DEMO ABERTA",
+      "kindTone": "topaz",
+      "expiresAt": null,
+      "estimatedMinutes": 20,
+      "slotsTaken": 4,
+      "slotsTotal": 100,
+      "progress": 1,
+      "rewardCents": 250,
+      "status": "Completo!"
+    }
+  ]
+}

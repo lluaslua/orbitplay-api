@@ -1,0 +1,655 @@
+[
+  {
+    "id": "game-002",
+    "studioId": "studio-001",
+    "studioName": "Blackstar games",
+    "name": "Azura Card Game",
+    "shortDescription": "Card game de duelos com cartas ilustradas à mão.",
+    "description": "Azura Card Game é um jogo de cartas colecionáveis em que cada deck representa uma casa arcana. As partidas são curtas e o teste mede a clareza das regras nas primeiras três partidas, além do equilíbrio entre as cartas iniciais.",
+    "bannerUrl": "./images/games/azura-card-game.jpg",
+    "thumbnailUrl": "./images/games/azura-card-game.jpg",
+    "status": "ARCHIVED",
+    "genres": [
+      "Estratégia",
+      "Casual"
+    ],
+    "platforms": [
+      "PC",
+      "WEB"
+    ],
+    "buildVersion": "1.2.0",
+    "minRewardCents": 0,
+    "maxRewardCents": 0,
+    "estimatedMinutes": 20,
+    "stats": {
+      "activeTests": 0,
+      "completedTests": 18,
+      "totalPlayers": 0,
+      "averageRating": 4.1,
+      "bugsReported": 9,
+      "pendingRewards": 0,
+      "remainingRewardCents": 0,
+      "campaignProgress": 1,
+      "playingNow": 0
+    },
+    "endsAt": null,
+    "isNew": false,
+    "createdAt": "2026-01-06T10:00:00.000Z",
+    "updatedAt": "2026-07-19T16:40:00.000Z",
+    "specs": {
+      "minOs": "Windows 10 64-bit",
+      "minCpu": "Intel i3-6100 / Ryzen 3 1200",
+      "minRam": "4 GB",
+      "minGpu": "Intel HD 620",
+      "diskSpace": "3 GB",
+      "requiresController": false,
+      "requiresMicrophone": false,
+      "requiresWebcam": false
+    }
+  },
+  {
+    "id": "game-001",
+    "studioId": "studio-001",
+    "studioName": "Blackstar games",
+    "name": "Racha de Rua!",
+    "shortDescription": "Corrida arcade de rua com carros brasileiros customizáveis.",
+    "description": "Racha de Rua! é um arcade de corrida ambientado nas ruas noturnas de São Paulo. O jogador monta o próprio carro peça por peça, encara rachas clandestinos e foge da polícia em perseguições dinâmicas. O foco do teste está na sensação de dirigibilidade e na curva de dificuldade das três primeiras horas.",
+    "bannerUrl": "./images/games/racha-de-rua.png",
+    "thumbnailUrl": "./images/games/racha-de-rua.png",
+    "status": "ACTIVE",
+    "genres": [
+      "Corrida",
+      "Ação"
+    ],
+    "platforms": [
+      "PC",
+      "CONSOLE"
+    ],
+    "buildVersion": "0.9.4-beta",
+    "minRewardCents": 500,
+    "maxRewardCents": 2500,
+    "estimatedMinutes": 30,
+    "stats": {
+      "activeTests": 5,
+      "completedTests": 45,
+      "totalPlayers": 124,
+      "averageRating": 4.3,
+      "bugsReported": 37,
+      "pendingRewards": 240000,
+      "remainingRewardCents": 157500,
+      "campaignProgress": 0.4018,
+      "playingNow": 22157
+    },
+    "endsAt": "2026-09-05T15:32:00.000Z",
+    "isNew": true,
+    "createdAt": "2026-02-11T13:00:00.000Z",
+    "updatedAt": "2026-08-28T18:20:00.000Z",
+    "specs": {
+      "minOs": "Windows 10 64-bit",
+      "minCpu": "Intel i5-8400 / Ryzen 5 2600",
+      "minRam": "8 GB",
+      "minGpu": "GTX 1060 6GB",
+      "diskSpace": "24 GB",
+      "requiresController": false,
+      "requiresMicrophone": true,
+      "requiresWebcam": false
+    }
+  },
+  {
+    "id": "game-101",
+    "studioId": "studio-ext",
+    "studioName": "Aquiris",
+    "name": "Horizon Chase 2",
+    "shortDescription": "Horizon Chase 2, de Aquiris.",
+    "description": "Horizon Chase 2 está em teste aberto na OrbitPlay. Jogue uma sessão, responda à avaliação e receba a recompensa depois da validação do estúdio.",
+    "bannerUrl": "./images/games/horizon-chase-2.jpg",
+    "thumbnailUrl": "./images/games/horizon-chase-2.jpg",
+    "status": "ACTIVE",
+    "genres": [
+      "Corrida"
+    ],
+    "platforms": [
+      "PC"
+    ],
+    "buildVersion": "1.0.0",
+    "minRewardCents": 50,
+    "maxRewardCents": 2500,
+    "estimatedMinutes": 25,
+    "stats": {
+      "activeTests": 5,
+      "completedTests": 0,
+      "totalPlayers": 22157,
+      "averageRating": 4.5,
+      "bugsReported": 0,
+      "pendingRewards": 0,
+      "remainingRewardCents": 157500,
+      "campaignProgress": 0.5,
+      "playingNow": 22157
+    },
+    "endsAt": "2026-09-06T15:32:00.000Z",
+    "isNew": false,
+    "createdAt": "2026-08-01T10:00:00.000Z",
+    "updatedAt": "2026-09-01T10:00:00.000Z",
+    "specs": {
+      "minOs": "Windows 10 64-bit",
+      "minCpu": "Intel i5-8400 / Ryzen 5 2600",
+      "minRam": "8 GB",
+      "minGpu": "GTX 1060 6GB",
+      "diskSpace": "12 GB",
+      "requiresController": false,
+      "requiresMicrophone": false,
+      "requiresWebcam": false
+    }
+  },
+  {
+    "id": "game-102",
+    "studioId": "studio-ext",
+    "studioName": "Wildlife",
+    "name": "Tênis Clash",
+    "shortDescription": "Tênis Clash, de Wildlife.",
+    "description": "Tênis Clash está em teste aberto na OrbitPlay. Jogue uma sessão, responda à avaliação e receba a recompensa depois da validação do estúdio.",
+    "bannerUrl": "./images/games/tenis-clash.png",
+    "thumbnailUrl": "./images/games/tenis-clash.png",
+    "status": "ACTIVE",
+    "genres": [
+      "Esporte",
+      "Casual"
+    ],
+    "platforms": [
+      "PC"
+    ],
+    "buildVersion": "1.0.0",
+    "minRewardCents": 50,
+    "maxRewardCents": 200,
+    "estimatedMinutes": 25,
+    "stats": {
+      "activeTests": 2,
+      "completedTests": 0,
+      "totalPlayers": 1742,
+      "averageRating": 4.5,
+      "bugsReported": 0,
+      "pendingRewards": 0,
+      "remainingRewardCents": 12200,
+      "campaignProgress": 0.5,
+      "playingNow": 1742
+    },
+    "endsAt": "2026-09-06T15:32:00.000Z",
+    "isNew": true,
+    "createdAt": "2026-08-01T10:00:00.000Z",
+    "updatedAt": "2026-09-01T10:00:00.000Z",
+    "specs": {
+      "minOs": "Windows 10 64-bit",
+      "minCpu": "Intel i5-8400 / Ryzen 5 2600",
+      "minRam": "8 GB",
+      "minGpu": "GTX 1060 6GB",
+      "diskSpace": "12 GB",
+      "requiresController": false,
+      "requiresMicrophone": false,
+      "requiresWebcam": false
+    }
+  },
+  {
+    "id": "game-103",
+    "studioId": "studio-ext",
+    "studioName": "Hammer95",
+    "name": "Mullet Madjack",
+    "shortDescription": "Mullet Madjack, de Hammer95.",
+    "description": "Mullet Madjack está em teste aberto na OrbitPlay. Jogue uma sessão, responda à avaliação e receba a recompensa depois da validação do estúdio.",
+    "bannerUrl": "./images/games/mullet-madjack.png",
+    "thumbnailUrl": "./images/games/mullet-madjack.png",
+    "status": "ACTIVE",
+    "genres": [
+      "Ação"
+    ],
+    "platforms": [
+      "PC"
+    ],
+    "buildVersion": "1.0.0",
+    "minRewardCents": 50,
+    "maxRewardCents": 7500,
+    "estimatedMinutes": 25,
+    "stats": {
+      "activeTests": 15,
+      "completedTests": 0,
+      "totalPlayers": 155,
+      "averageRating": 4.5,
+      "bugsReported": 0,
+      "pendingRewards": 0,
+      "remainingRewardCents": 557500,
+      "campaignProgress": 0.5,
+      "playingNow": 155
+    },
+    "endsAt": "2026-09-06T15:32:00.000Z",
+    "isNew": true,
+    "createdAt": "2026-08-01T10:00:00.000Z",
+    "updatedAt": "2026-09-01T10:00:00.000Z",
+    "specs": {
+      "minOs": "Windows 10 64-bit",
+      "minCpu": "Intel i5-8400 / Ryzen 5 2600",
+      "minRam": "8 GB",
+      "minGpu": "GTX 1060 6GB",
+      "diskSpace": "12 GB",
+      "requiresController": false,
+      "requiresMicrophone": false,
+      "requiresWebcam": false
+    }
+  },
+  {
+    "id": "game-104",
+    "studioId": "studio-ext",
+    "studioName": "Gaucho Games",
+    "name": "Gauchinho and the Grasshopper",
+    "shortDescription": "Gauchinho and the Grasshopper, de Gaucho Games.",
+    "description": "Gauchinho and the Grasshopper está em teste aberto na OrbitPlay. Jogue uma sessão, responda à avaliação e receba a recompensa depois da validação do estúdio.",
+    "bannerUrl": "./images/games/gauchinho.png",
+    "thumbnailUrl": "./images/games/gauchinho.png",
+    "status": "ACTIVE",
+    "genres": [
+      "Aventura"
+    ],
+    "platforms": [
+      "PC"
+    ],
+    "buildVersion": "1.0.0",
+    "minRewardCents": 50,
+    "maxRewardCents": 500,
+    "estimatedMinutes": 25,
+    "stats": {
+      "activeTests": 3,
+      "completedTests": 0,
+      "totalPlayers": 581,
+      "averageRating": 4.5,
+      "bugsReported": 0,
+      "pendingRewards": 0,
+      "remainingRewardCents": 8500,
+      "campaignProgress": 0.5,
+      "playingNow": 581
+    },
+    "endsAt": "2026-09-06T15:32:00.000Z",
+    "isNew": false,
+    "createdAt": "2026-08-01T10:00:00.000Z",
+    "updatedAt": "2026-09-01T10:00:00.000Z",
+    "specs": {
+      "minOs": "Windows 10 64-bit",
+      "minCpu": "Intel i5-8400 / Ryzen 5 2600",
+      "minRam": "8 GB",
+      "minGpu": "GTX 1060 6GB",
+      "diskSpace": "12 GB",
+      "requiresController": false,
+      "requiresMicrophone": false,
+      "requiresWebcam": false
+    }
+  },
+  {
+    "id": "game-105",
+    "studioId": "studio-ext",
+    "studioName": "Dumativa",
+    "name": "Enigma do Medo",
+    "shortDescription": "Enigma do Medo, de Dumativa.",
+    "description": "Enigma do Medo está em teste aberto na OrbitPlay. Jogue uma sessão, responda à avaliação e receba a recompensa depois da validação do estúdio.",
+    "bannerUrl": "./images/games/enigma-do-medo.png",
+    "thumbnailUrl": "./images/games/enigma-do-medo.png",
+    "status": "ACTIVE",
+    "genres": [
+      "Terror",
+      "Puzzle"
+    ],
+    "platforms": [
+      "PC"
+    ],
+    "buildVersion": "1.0.0",
+    "minRewardCents": 50,
+    "maxRewardCents": 7500,
+    "estimatedMinutes": 25,
+    "stats": {
+      "activeTests": 15,
+      "completedTests": 0,
+      "totalPlayers": 222157,
+      "averageRating": 4.5,
+      "bugsReported": 0,
+      "pendingRewards": 0,
+      "remainingRewardCents": 557500,
+      "campaignProgress": 0.5,
+      "playingNow": 222157
+    },
+    "endsAt": "2026-09-06T15:32:00.000Z",
+    "isNew": false,
+    "createdAt": "2026-08-01T10:00:00.000Z",
+    "updatedAt": "2026-09-01T10:00:00.000Z",
+    "specs": {
+      "minOs": "Windows 10 64-bit",
+      "minCpu": "Intel i5-8400 / Ryzen 5 2600",
+      "minRam": "8 GB",
+      "minGpu": "GTX 1060 6GB",
+      "diskSpace": "12 GB",
+      "requiresController": false,
+      "requiresMicrophone": false,
+      "requiresWebcam": false
+    }
+  },
+  {
+    "id": "game-106",
+    "studioId": "studio-ext",
+    "studioName": "Behold Studios",
+    "name": "Chroma Squad",
+    "shortDescription": "Chroma Squad, de Behold Studios.",
+    "description": "Chroma Squad está em teste aberto na OrbitPlay. Jogue uma sessão, responda à avaliação e receba a recompensa depois da validação do estúdio.",
+    "bannerUrl": "./images/games/chroma-squad.jpg",
+    "thumbnailUrl": "./images/games/chroma-squad.jpg",
+    "status": "ACTIVE",
+    "genres": [
+      "Estratégia",
+      "RPG"
+    ],
+    "platforms": [
+      "PC"
+    ],
+    "buildVersion": "1.0.0",
+    "minRewardCents": 50,
+    "maxRewardCents": 200,
+    "estimatedMinutes": 25,
+    "stats": {
+      "activeTests": 2,
+      "completedTests": 0,
+      "totalPlayers": 1742,
+      "averageRating": 4.5,
+      "bugsReported": 0,
+      "pendingRewards": 0,
+      "remainingRewardCents": 12200,
+      "campaignProgress": 0.5,
+      "playingNow": 1742
+    },
+    "endsAt": "2026-09-06T15:32:00.000Z",
+    "isNew": false,
+    "createdAt": "2026-08-01T10:00:00.000Z",
+    "updatedAt": "2026-09-01T10:00:00.000Z",
+    "specs": {
+      "minOs": "Windows 10 64-bit",
+      "minCpu": "Intel i5-8400 / Ryzen 5 2600",
+      "minRam": "8 GB",
+      "minGpu": "GTX 1060 6GB",
+      "diskSpace": "12 GB",
+      "requiresController": false,
+      "requiresMicrophone": false,
+      "requiresWebcam": false
+    }
+  },
+  {
+    "id": "game-107",
+    "studioId": "studio-ext",
+    "studioName": "Betagames",
+    "name": "171",
+    "shortDescription": "171, de Betagames.",
+    "description": "171 está em teste aberto na OrbitPlay. Jogue uma sessão, responda à avaliação e receba a recompensa depois da validação do estúdio.",
+    "bannerUrl": "./images/games/171.jpg",
+    "thumbnailUrl": "./images/games/171.jpg",
+    "status": "ACTIVE",
+    "genres": [
+      "Ação",
+      "Aventura"
+    ],
+    "platforms": [
+      "PC"
+    ],
+    "buildVersion": "1.0.0",
+    "minRewardCents": 50,
+    "maxRewardCents": 500,
+    "estimatedMinutes": 25,
+    "stats": {
+      "activeTests": 3,
+      "completedTests": 0,
+      "totalPlayers": 581,
+      "averageRating": 4.5,
+      "bugsReported": 0,
+      "pendingRewards": 0,
+      "remainingRewardCents": 8500,
+      "campaignProgress": 0.5,
+      "playingNow": 581
+    },
+    "endsAt": "2026-09-06T15:32:00.000Z",
+    "isNew": false,
+    "createdAt": "2026-08-01T10:00:00.000Z",
+    "updatedAt": "2026-09-01T10:00:00.000Z",
+    "specs": {
+      "minOs": "Windows 10 64-bit",
+      "minCpu": "Intel i5-8400 / Ryzen 5 2600",
+      "minRam": "8 GB",
+      "minGpu": "GTX 1060 6GB",
+      "diskSpace": "12 GB",
+      "requiresController": false,
+      "requiresMicrophone": false,
+      "requiresWebcam": false
+    }
+  },
+  {
+    "id": "game-108",
+    "studioId": "studio-ext",
+    "studioName": "Kokoro",
+    "name": "A Lenda do Herói",
+    "shortDescription": "A Lenda do Herói, de Kokoro.",
+    "description": "A Lenda do Herói está em teste aberto na OrbitPlay. Jogue uma sessão, responda à avaliação e receba a recompensa depois da validação do estúdio.",
+    "bannerUrl": "./images/games/a-lenda-do-heroi.jpg",
+    "thumbnailUrl": "./images/games/a-lenda-do-heroi.jpg",
+    "status": "ACTIVE",
+    "genres": [
+      "Aventura"
+    ],
+    "platforms": [
+      "PC"
+    ],
+    "buildVersion": "1.0.0",
+    "minRewardCents": 50,
+    "maxRewardCents": 7500,
+    "estimatedMinutes": 25,
+    "stats": {
+      "activeTests": 15,
+      "completedTests": 0,
+      "totalPlayers": 222157,
+      "averageRating": 4.5,
+      "bugsReported": 0,
+      "pendingRewards": 0,
+      "remainingRewardCents": 557500,
+      "campaignProgress": 0.5,
+      "playingNow": 222157
+    },
+    "endsAt": "2026-09-06T15:32:00.000Z",
+    "isNew": true,
+    "createdAt": "2026-08-01T10:00:00.000Z",
+    "updatedAt": "2026-09-01T10:00:00.000Z",
+    "specs": {
+      "minOs": "Windows 10 64-bit",
+      "minCpu": "Intel i5-8400 / Ryzen 5 2600",
+      "minRam": "8 GB",
+      "minGpu": "GTX 1060 6GB",
+      "diskSpace": "12 GB",
+      "requiresController": false,
+      "requiresMicrophone": false,
+      "requiresWebcam": false
+    }
+  },
+  {
+    "id": "game-109",
+    "studioId": "studio-ext",
+    "studioName": "Mad Mimic",
+    "name": "Dandy Ace",
+    "shortDescription": "Dandy Ace, de Mad Mimic.",
+    "description": "Dandy Ace está em teste aberto na OrbitPlay. Jogue uma sessão, responda à avaliação e receba a recompensa depois da validação do estúdio.",
+    "bannerUrl": "./images/games/dandy-ace.jpg",
+    "thumbnailUrl": "./images/games/dandy-ace.jpg",
+    "status": "ACTIVE",
+    "genres": [
+      "Ação",
+      "RPG"
+    ],
+    "platforms": [
+      "PC"
+    ],
+    "buildVersion": "1.0.0",
+    "minRewardCents": 50,
+    "maxRewardCents": 200,
+    "estimatedMinutes": 25,
+    "stats": {
+      "activeTests": 2,
+      "completedTests": 0,
+      "totalPlayers": 1742,
+      "averageRating": 4.5,
+      "bugsReported": 0,
+      "pendingRewards": 0,
+      "remainingRewardCents": 12200,
+      "campaignProgress": 0.5,
+      "playingNow": 1742
+    },
+    "endsAt": "2026-09-06T15:32:00.000Z",
+    "isNew": true,
+    "createdAt": "2026-08-01T10:00:00.000Z",
+    "updatedAt": "2026-09-01T10:00:00.000Z",
+    "specs": {
+      "minOs": "Windows 10 64-bit",
+      "minCpu": "Intel i5-8400 / Ryzen 5 2600",
+      "minRam": "8 GB",
+      "minGpu": "GTX 1060 6GB",
+      "diskSpace": "12 GB",
+      "requiresController": false,
+      "requiresMicrophone": false,
+      "requiresWebcam": false
+    }
+  },
+  {
+    "id": "game-110",
+    "studioId": "studio-ext",
+    "studioName": "Aquiris",
+    "name": "Horizon Chase",
+    "shortDescription": "Horizon Chase, de Aquiris.",
+    "description": "Horizon Chase está em teste aberto na OrbitPlay. Jogue uma sessão, responda à avaliação e receba a recompensa depois da validação do estúdio.",
+    "bannerUrl": "./images/games/horizon-chase.jpg",
+    "thumbnailUrl": "./images/games/horizon-chase.jpg",
+    "status": "ACTIVE",
+    "genres": [
+      "Corrida"
+    ],
+    "platforms": [
+      "PC"
+    ],
+    "buildVersion": "1.0.0",
+    "minRewardCents": 50,
+    "maxRewardCents": 200,
+    "estimatedMinutes": 25,
+    "stats": {
+      "activeTests": 2,
+      "completedTests": 0,
+      "totalPlayers": 1742,
+      "averageRating": 4.5,
+      "bugsReported": 0,
+      "pendingRewards": 0,
+      "remainingRewardCents": 12200,
+      "campaignProgress": 0.5,
+      "playingNow": 1742
+    },
+    "endsAt": "2026-09-06T15:32:00.000Z",
+    "isNew": true,
+    "createdAt": "2026-08-01T10:00:00.000Z",
+    "updatedAt": "2026-09-01T10:00:00.000Z",
+    "specs": {
+      "minOs": "Windows 10 64-bit",
+      "minCpu": "Intel i5-8400 / Ryzen 5 2600",
+      "minRam": "8 GB",
+      "minGpu": "GTX 1060 6GB",
+      "diskSpace": "12 GB",
+      "requiresController": false,
+      "requiresMicrophone": false,
+      "requiresWebcam": false
+    }
+  },
+  {
+    "id": "game-111",
+    "studioId": "studio-ext",
+    "studioName": "Aoca Game Lab",
+    "name": "Arida: Backland's Awakening",
+    "shortDescription": "Arida: Backland's Awakening, de Aoca Game Lab.",
+    "description": "Arida: Backland's Awakening está em teste aberto na OrbitPlay. Jogue uma sessão, responda à avaliação e receba a recompensa depois da validação do estúdio.",
+    "bannerUrl": "./images/games/arida.jpg",
+    "thumbnailUrl": "./images/games/arida.jpg",
+    "status": "ACTIVE",
+    "genres": [
+      "Aventura"
+    ],
+    "platforms": [
+      "PC"
+    ],
+    "buildVersion": "1.0.0",
+    "minRewardCents": 50,
+    "maxRewardCents": 500,
+    "estimatedMinutes": 25,
+    "stats": {
+      "activeTests": 3,
+      "completedTests": 0,
+      "totalPlayers": 581,
+      "averageRating": 4.5,
+      "bugsReported": 0,
+      "pendingRewards": 0,
+      "remainingRewardCents": 8500,
+      "campaignProgress": 0.5,
+      "playingNow": 581
+    },
+    "endsAt": "2026-09-06T15:32:00.000Z",
+    "isNew": false,
+    "createdAt": "2026-08-01T10:00:00.000Z",
+    "updatedAt": "2026-09-01T10:00:00.000Z",
+    "specs": {
+      "minOs": "Windows 10 64-bit",
+      "minCpu": "Intel i5-8400 / Ryzen 5 2600",
+      "minRam": "8 GB",
+      "minGpu": "GTX 1060 6GB",
+      "diskSpace": "12 GB",
+      "requiresController": false,
+      "requiresMicrophone": false,
+      "requiresWebcam": false
+    }
+  },
+  {
+    "id": "game-112",
+    "studioId": "studio-ext",
+    "studioName": "MiniBoss",
+    "name": "Out There Somewhere",
+    "shortDescription": "Out There Somewhere, de MiniBoss.",
+    "description": "Out There Somewhere está em teste aberto na OrbitPlay. Jogue uma sessão, responda à avaliação e receba a recompensa depois da validação do estúdio.",
+    "bannerUrl": "./images/games/out-there-somewhere.jpg",
+    "thumbnailUrl": "./images/games/out-there-somewhere.jpg",
+    "status": "ACTIVE",
+    "genres": [
+      "Puzzle"
+    ],
+    "platforms": [
+      "PC"
+    ],
+    "buildVersion": "1.0.0",
+    "minRewardCents": 50,
+    "maxRewardCents": 7500,
+    "estimatedMinutes": 25,
+    "stats": {
+      "activeTests": 15,
+      "completedTests": 0,
+      "totalPlayers": 222157,
+      "averageRating": 4.5,
+      "bugsReported": 0,
+      "pendingRewards": 0,
+      "remainingRewardCents": 557500,
+      "campaignProgress": 0.5,
+      "playingNow": 222157
+    },
+    "endsAt": "2026-09-06T15:32:00.000Z",
+    "isNew": false,
+    "createdAt": "2026-08-01T10:00:00.000Z",
+    "updatedAt": "2026-09-01T10:00:00.000Z",
+    "specs": {
+      "minOs": "Windows 10 64-bit",
+      "minCpu": "Intel i5-8400 / Ryzen 5 2600",
+      "minRam": "8 GB",
+      "minGpu": "GTX 1060 6GB",
+      "diskSpace": "12 GB",
+      "requiresController": false,
+      "requiresMicrophone": false,
+      "requiresWebcam": false
+    }
+  }
+]

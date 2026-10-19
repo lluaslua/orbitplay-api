@@ -1,0 +1,84 @@
+{
+  "channels": [
+    { "id": "geral", "name": "#Geral" },
+    { "id": "bugs", "name": "#Bugs" },
+    { "id": "novidades", "name": "#Novidades" },
+    { "id": "eventos", "name": "#Eventos" }
+  ],
+  "members": [
+    {
+      "userId": "studio-001",
+      "name": "Gusmão",
+      "role": "DEV",
+      "avatarUrl": "./images/community/gusmao.webp",
+      "online": true
+    },
+    {
+      "userId": "qa-cellbitos",
+      "name": "Cellbitos",
+      "role": "QA",
+      "avatarUrl": "./images/community/cellbitos.webp",
+      "online": true
+    },
+    {
+      "userId": "qa-jones",
+      "name": "Jones",
+      "role": "QA",
+      "avatarUrl": "./images/community/jones.webp",
+      "online": true
+    },
+    {
+      "userId": "player-001",
+      "name": "Guilherme",
+      "role": "ELITE",
+      "avatarUrl": "./images/community/guilherme.webp",
+      "online": true
+    }
+  ],
+  "messages": {
+    "game-001": [
+      {
+        "id": "msg-1",
+        "channelId": "geral",
+        "authorId": "studio-001",
+        "text": "Eai gente!!! todos bem?",
+        "sentAt": "2026-01-30T09:59:00"
+      },
+      {
+        "id": "msg-2",
+        "channelId": "geral",
+        "authorId": "studio-001",
+        "text": "Pessoal, vou liberar um trneio aqui ein, atenção na descrição pois tem premios, bora lá?",
+        "sentAt": "2026-01-30T09:59:00"
+      },
+      {
+        "id": "msg-3",
+        "channelId": "geral",
+        "authorId": "qa-cellbitos",
+        "text": "Ahhhh não acredito, liberou aqui mas n consegui entar ahhahaha",
+        "sentAt": "2026-01-30T09:59:00"
+      },
+      {
+        "id": "msg-4",
+        "channelId": "geral",
+        "authorId": "player-001",
+        "text": "Alguem ai gravou o torneio?? ou to doido?",
+        "sentAt": "2026-01-30T09:59:00"
+      },
+      {
+        "id": "msg-5",
+        "channelId": "geral",
+        "authorId": "qa-jones",
+        "text": "Puts só a final",
+        "sentAt": "2026-01-30T09:59:00"
+      },
+      {
+        "id": "msg-6",
+        "channelId": "geral",
+        "authorId": "player-001",
+        "text": "na pazz, pensei que tinha gravado o torneio antes desse tb haha",
+        "sentAt": "2026-01-30T09:59:00"
+      }
+    ]
+  }
+}

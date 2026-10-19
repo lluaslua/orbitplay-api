@@ -1,0 +1,57 @@
+{
+  "name": "orbitplay-api",
+  "version": "0.1.0",
+  "description": "OrbitPlay - API de playtesting (NestJS). O contrato vive em src/contracts, espelho de orbitplay-app/src/types.",
+  "private": true,
+  "scripts": {
+    "build": "nest build",
+    "start": "nest start",
+    "start:dev": "nest start --watch",
+    "start:debug": "nest start --debug --watch",
+    "start:prod": "node dist/main",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write \"src/**/*.ts\" \"prisma/**/*.ts\" \"test/**/*.ts\"",
+    "prisma:generate": "prisma generate",
+    "db:up": "\"C:/Program Files/PostgreSQL/18/bin/pg_ctl.exe\" -D .pgdata -o \"-p 5433\" -l postgres-local.log -w start",
+    "db:down": "\"C:/Program Files/PostgreSQL/18/bin/pg_ctl.exe\" -D .pgdata stop",
+    "db:status": "\"C:/Program Files/PostgreSQL/18/bin/pg_ctl.exe\" -D .pgdata status",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "prisma db seed",
+    "db:reset": "prisma migrate reset",
+    "test:e2e": "jest --config ./test/jest-e2e.json --runInBand"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.0.1",
+    "@nestjs/config": "^4.0.0",
+    "@nestjs/core": "^11.0.1",
+    "@nestjs/jwt": "^11.0.0",
+    "@nestjs/platform-express": "^11.0.1",
+    "@prisma/client": "^6.1.0",
+    "bcryptjs": "^3.0.2",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.0",
+    "@nestjs/schematics": "^11.0.0",
+    "@nestjs/testing": "^11.0.1",
+    "@types/express": "^5.0.0",
+    "@types/jest": "^29.5.14",
+    "@types/multer": "^1.4.12",
+    "@types/node": "^22.10.5",
+    "@types/supertest": "^6.0.2",
+    "jest": "^29.7.0",
+    "prettier": "^3.4.2",
+    "prisma": "^6.1.0",
+    "supertest": "^7.0.0",
+    "ts-jest": "^29.2.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

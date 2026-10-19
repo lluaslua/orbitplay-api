@@ -1,0 +1,379 @@
+[
+  {
+    "id": "test-001",
+    "gameId": "game-001",
+    "gameName": "Racha de Rua!",
+    "gameThumbnailUrl": "./images/games/racha-de-rua.png",
+    "title": "Pista Terra v1.3",
+    "model": "TELEMETRY",
+    "status": "ACTIVE",
+    "instructions": "Jogue o modo carreira livremente por pelo menos 20 minutos. Não siga um roteiro: escolha as corridas que quiser e customize o carro como preferir. Fale em voz alta o que estiver pensando enquanto joga.",
+    "requiresRecording": true,
+    "requiresMicrophone": true,
+    "requiresWebcam": false,
+    "questions": [
+      {
+        "id": "q-001",
+        "type": "LINEAR_SCALE",
+        "label": "Como você avalia a sensação de dirigibilidade dos carros?",
+        "helperText": "Considere peso, derrapagem e resposta dos comandos.",
+        "required": true,
+        "scaleMin": 1,
+        "scaleMax": 5,
+        "scaleMinLabel": "Travada",
+        "scaleMaxLabel": "Muito fluida"
+      },
+      {
+        "id": "q-002",
+        "type": "MULTIPLE_CHOICE",
+        "label": "Qual parte do jogo prendeu mais a sua atenção?",
+        "required": true,
+        "options": [
+          "Customização do carro",
+          "Corridas de rua",
+          "Fuga da polícia",
+          "História",
+          "Nenhuma"
+        ]
+      },
+      {
+        "id": "q-003",
+        "type": "CHECKBOXES",
+        "label": "Quais problemas você percebeu durante a sessão?",
+        "required": false,
+        "options": [
+          "Queda de FPS",
+          "Bug visual",
+          "Áudio dessincronizado",
+          "Controles não respondiam",
+          "Nenhum problema"
+        ]
+      },
+      {
+        "id": "q-004",
+        "type": "PARAGRAPH",
+        "label": "O que você mudaria no jogo antes do lançamento?",
+        "helperText": "Seja específico: quanto mais detalhe, maior a sua nota de qualidade.",
+        "required": true
+      },
+      {
+        "id": "q-005",
+        "type": "MULTIPLE_CHOICE",
+        "label": "Você recomendaria este jogo para um amigo?",
+        "required": true,
+        "options": [
+          "Sim",
+          "Não"
+        ]
+      }
+    ],
+    "audience": {
+      "locations": [
+        "BRASIL"
+      ],
+      "playerType": "CASUAL",
+      "archetype": "ALL",
+      "minAge": 16,
+      "maxAge": 40
+    },
+    "budget": {
+      "slots": 50,
+      "untilDisabled": false,
+      "basePriceCents": 69,
+      "audienceCents": 0,
+      "boostCents": 0,
+      "pricePerTestCents": 69,
+      "totalCents": 3450,
+      "rewardPerSessionCents": 250,
+      "durationDays": 14
+    },
+    "currentParticipants": 28,
+    "estimatedMinutes": 25,
+    "buildFileName": "racha-de-rua-0.9.4-beta.zip",
+    "buildSizeMb": 2480.5,
+    "createdAt": "2026-08-21T12:00:00.000Z",
+    "startsAt": "2025-08-10T12:00:00",
+    "expiresAt": "2026-09-05T15:32:54.000Z",
+    "plugin": true,
+    "endedAt": null,
+    "kind": "DEMO ABERTA"
+  },
+  {
+    "id": "test-002",
+    "gameId": "game-001",
+    "gameName": "Racha de Rua!",
+    "gameThumbnailUrl": "./images/games/racha-de-rua.png",
+    "title": "Teste Pointer GSX 2",
+    "model": "AB_TEST",
+    "status": "FINISHED",
+    "instructions": "Você receberá automaticamente uma das duas versões da perseguição policial. Jogue a missão 4 até o fim, duas vezes, e compare a experiência.",
+    "requiresRecording": true,
+    "requiresMicrophone": false,
+    "requiresWebcam": false,
+    "questions": [
+      {
+        "id": "q-010",
+        "type": "LINEAR_SCALE",
+        "label": "Qual foi o nível de dificuldade da perseguição?",
+        "required": true,
+        "scaleMin": 1,
+        "scaleMax": 5,
+        "scaleMinLabel": "Fácil demais",
+        "scaleMaxLabel": "Impossível"
+      },
+      {
+        "id": "q-011",
+        "type": "MULTIPLE_CHOICE",
+        "label": "Você terminou a missão na primeira tentativa?",
+        "required": true,
+        "options": [
+          "Sim",
+          "Não, precisei de 2 a 3 tentativas",
+          "Não, precisei de mais de 3 tentativas",
+          "Desisti"
+        ]
+      },
+      {
+        "id": "q-012",
+        "type": "PARAGRAPH",
+        "label": "Descreva o momento em que a missão ficou mais frustrante.",
+        "required": true
+      }
+    ],
+    "audience": {
+      "locations": [
+        "BRASIL"
+      ],
+      "playerType": "CASUAL",
+      "archetype": "ALL",
+      "minAge": 18,
+      "maxAge": 45
+    },
+    "budget": {
+      "slots": 30,
+      "untilDisabled": false,
+      "basePriceCents": 39,
+      "audienceCents": 0,
+      "boostCents": 0,
+      "pricePerTestCents": 39,
+      "totalCents": 1170,
+      "rewardPerSessionCents": 250,
+      "durationDays": 7
+    },
+    "currentParticipants": 30,
+    "estimatedMinutes": 35,
+    "buildFileName": "racha-de-rua-ab-0.9.4.zip",
+    "buildSizeMb": 2510,
+    "createdAt": "2026-08-25T09:30:00.000Z",
+    "startsAt": "2025-08-10T12:00:00",
+    "expiresAt": "2026-09-05T15:32:54.000Z",
+    "plugin": true,
+    "endedAt": "2025-08-10T12:00:00",
+    "kind": "DEMO ABERTA"
+  },
+  {
+    "id": "test-003",
+    "gameId": "game-001",
+    "gameName": "Racha de Rua!",
+    "gameThumbnailUrl": "./images/games/racha-de-rua.png",
+    "title": "Teste Pointer GSX 2",
+    "model": "FREE_EXPLORATION",
+    "status": "PROCESSING",
+    "instructions": "Siga a lista de tarefas exibida no overlay: construa o primeiro abrigo, fabrique uma jangada e alcance a segunda ilha. Reporte qualquer objetivo que não tenha ficado claro.",
+    "requiresRecording": true,
+    "requiresMicrophone": true,
+    "requiresWebcam": false,
+    "questions": [
+      {
+        "id": "q-020",
+        "type": "LINEAR_SCALE",
+        "label": "O tutorial deixou claro o que fazer?",
+        "required": true,
+        "scaleMin": 1,
+        "scaleMax": 5,
+        "scaleMinLabel": "Nada claro",
+        "scaleMaxLabel": "Muito claro"
+      },
+      {
+        "id": "q-021",
+        "type": "CHECKBOXES",
+        "label": "Quais tarefas você concluiu?",
+        "required": true,
+        "options": [
+          "Construir abrigo",
+          "Fabricar jangada",
+          "Alcançar a 2ª ilha",
+          "Derrotar a criatura da caverna"
+        ]
+      },
+      {
+        "id": "q-022",
+        "type": "PARAGRAPH",
+        "label": "Em que momento você ficou travado sem saber o que fazer?",
+        "required": true
+      }
+    ],
+    "audience": {
+      "locations": [
+        "BRASIL"
+      ],
+      "playerType": "CASUAL",
+      "archetype": "ALL",
+      "minAge": 14,
+      "maxAge": 50
+    },
+    "budget": {
+      "slots": 40,
+      "untilDisabled": false,
+      "basePriceCents": 59,
+      "audienceCents": 0,
+      "boostCents": 0,
+      "pricePerTestCents": 59,
+      "totalCents": 2360,
+      "rewardPerSessionCents": 250,
+      "durationDays": 21
+    },
+    "currentParticipants": 17,
+    "estimatedMinutes": 20,
+    "buildFileName": "island-explorer-0.6.1.zip",
+    "buildSizeMb": 940.2,
+    "createdAt": "2026-08-14T16:00:00.000Z",
+    "startsAt": "2025-08-10T12:00:00",
+    "expiresAt": "2026-09-05T15:32:54.000Z",
+    "plugin": true,
+    "endedAt": "2025-08-10T12:00:00",
+    "kind": "DEMO ABERTA"
+  },
+  {
+    "id": "test-004",
+    "gameId": "game-002",
+    "gameName": "Azura Card Game",
+    "gameThumbnailUrl": "./images/games/azura-card-game.jpg",
+    "title": "Teste Lin 1.6",
+    "model": "AB_IMAGES",
+    "status": "PROCESSING",
+    "instructions": "Tente quebrar o sistema de crafting: combine itens inválidos, encha o inventário, cancele receitas no meio. Cada bug reproduzível aumenta a sua recompensa.",
+    "requiresRecording": true,
+    "requiresMicrophone": false,
+    "requiresWebcam": false,
+    "questions": [
+      {
+        "id": "q-030",
+        "type": "PARAGRAPH",
+        "label": "Descreva o passo a passo para reproduzir o bug mais grave que encontrou.",
+        "required": true
+      },
+      {
+        "id": "q-031",
+        "type": "LINEAR_SCALE",
+        "label": "Qual a gravidade do bug encontrado?",
+        "required": true,
+        "scaleMin": 1,
+        "scaleMax": 5,
+        "scaleMinLabel": "Cosmético",
+        "scaleMaxLabel": "Trava o jogo"
+      },
+      {
+        "id": "q-032",
+        "type": "MULTIPLE_CHOICE",
+        "label": "O bug se repetiu quando você tentou de novo?",
+        "required": true,
+        "options": [
+          "Sim",
+          "Não"
+        ]
+      }
+    ],
+    "audience": {
+      "locations": [
+        "BRASIL"
+      ],
+      "playerType": "CASUAL",
+      "archetype": "ALL",
+      "minAge": 16,
+      "maxAge": 60
+    },
+    "budget": {
+      "slots": 25,
+      "untilDisabled": false,
+      "basePriceCents": 19,
+      "audienceCents": 0,
+      "boostCents": 0,
+      "pricePerTestCents": 19,
+      "totalCents": 475,
+      "rewardPerSessionCents": 250,
+      "durationDays": 10
+    },
+    "currentParticipants": 9,
+    "estimatedMinutes": 40,
+    "buildFileName": "island-explorer-craft-0.6.1.zip",
+    "buildSizeMb": 955.8,
+    "createdAt": "2026-08-27T11:15:00.000Z",
+    "startsAt": "2025-08-10T12:00:00",
+    "expiresAt": "2026-09-05T15:32:54.000Z",
+    "plugin": false,
+    "endedAt": "2025-08-10T12:00:00",
+    "kind": "DEMO ABERTA"
+  },
+  {
+    "id": "test-005",
+    "gameId": "game-001",
+    "gameName": "Racha de Rua!",
+    "gameThumbnailUrl": "./images/games/racha-de-rua.png",
+    "title": "Pista São Paulo v1.3",
+    "model": "TELEMETRY",
+    "status": "PROCESSING",
+    "instructions": "Jogue focando na progressão econômica: compre peças, teste upgrades e avalie se o dinheiro ganho nas corridas é suficiente.",
+    "requiresRecording": false,
+    "requiresMicrophone": false,
+    "requiresWebcam": false,
+    "questions": [
+      {
+        "id": "q-040",
+        "type": "LINEAR_SCALE",
+        "label": "O dinheiro ganho nas corridas parece justo?",
+        "required": true,
+        "scaleMin": 1,
+        "scaleMax": 5,
+        "scaleMinLabel": "Muito pouco",
+        "scaleMaxLabel": "Muito generoso"
+      },
+      {
+        "id": "q-041",
+        "type": "PARAGRAPH",
+        "label": "Qual peça pareceu cara demais para o benefício que dá?",
+        "required": false
+      }
+    ],
+    "audience": {
+      "locations": [
+        "BRASIL"
+      ],
+      "playerType": "CASUAL",
+      "archetype": "ALL",
+      "minAge": 16,
+      "maxAge": 40
+    },
+    "budget": {
+      "slots": 20,
+      "untilDisabled": false,
+      "basePriceCents": 69,
+      "audienceCents": 0,
+      "boostCents": 0,
+      "pricePerTestCents": 69,
+      "totalCents": 1380,
+      "rewardPerSessionCents": 250,
+      "durationDays": 14
+    },
+    "currentParticipants": 20,
+    "estimatedMinutes": 30,
+    "buildFileName": "racha-de-rua-0.8.9.zip",
+    "buildSizeMb": 2380,
+    "createdAt": "2026-07-02T14:00:00.000Z",
+    "startsAt": "2025-08-10T12:00:00",
+    "expiresAt": "2026-09-05T15:32:54.000Z",
+    "plugin": true,
+    "endedAt": "2025-08-10T12:00:00",
+    "kind": "DEMO ABERTA"
+  }
+]

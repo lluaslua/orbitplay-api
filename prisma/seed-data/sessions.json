@@ -1,0 +1,388 @@
+[
+  {
+    "id": "session-001",
+    "testId": "test-001",
+    "testTitle": "Exploração Livre + Telemetria - Modo Carreira",
+    "gameId": "game-001",
+    "gameName": "Racha de Rua",
+    "playerId": "player-002",
+    "playerName": "Carlos Mendes",
+    "playerLevel": 22,
+    "durationSeconds": 1380,
+    "feedbackQuality": 4.5,
+    "bugsFound": 3,
+    "overallRating": 4.2,
+    "xpEarned": 150,
+    "rewardCents": 15000,
+    "rewardStatus": "PENDING",
+    "recordedAt": "2026-09-01T21:14:00.000Z",
+    "videoUrl": null,
+    "transcript": "Ok, comecei criando o carro... a tela de customização tem muita opção logo de cara, fiquei meio perdido. [00:02] Peguei o Fusca turbinado porque parecia o mais barato. A primeira corrida foi tranquila, ganhei fácil. [00:07] A direção é boa, mas quando eu freio em curva o carro parece que escorrega demais no asfalto molhado. [00:11] Opa, aqui travou uns dois segundos quando a polícia entrou na tela. [00:14] Voltei pra loja, comprei um turbo... não senti diferença nenhuma no desempenho, isso me incomodou. [00:19] Essa perseguição tá difícil demais pra terceira missão, morri três vezes. [00:22] No geral gostei bastante, o clima noturno da cidade ficou muito bom.",
+    "timeline": [
+      { "id": "ev-001", "atSecond": 45, "type": "CHECKPOINT", "label": "Tutorial concluído", "detail": "Customização inicial finalizada em 45s" },
+      { "id": "ev-002", "atSecond": 132, "type": "COMMENT", "label": "Excesso de opções na customização", "detail": "Jogador relatou confusão na primeira tela" },
+      { "id": "ev-003", "atSecond": 420, "type": "HIGHLIGHT", "label": "Primeira vitória", "detail": "Corrida 1 vencida com folga de 4,2s" },
+      { "id": "ev-004", "atSecond": 660, "type": "BUG", "label": "Perda de tração no asfalto molhado", "detail": "Coeficiente de atrito parece baixo demais" },
+      { "id": "ev-005", "atSecond": 840, "type": "BUG", "label": "Queda de FPS na entrada da polícia", "detail": "Freeze de ~2s ao instanciar as viaturas" },
+      { "id": "ev-006", "atSecond": 1140, "type": "BUG", "label": "Turbo sem efeito visível", "detail": "Upgrade comprado não alterou a aceleração" },
+      { "id": "ev-007", "atSecond": 1200, "type": "DEATH", "label": "Falha na missão 3", "detail": "Primeira derrota na perseguição" },
+      { "id": "ev-008", "atSecond": 1275, "type": "DEATH", "label": "Falha na missão 3", "detail": "Terceira derrota consecutiva" },
+      { "id": "ev-009", "atSecond": 1350, "type": "HIGHLIGHT", "label": "Elogio ao clima noturno", "detail": "Comentário positivo sobre a direção de arte" }
+    ],
+    "insights": [
+      {
+        "id": "ins-001",
+        "title": "Pico de dificuldade na missão 3",
+        "description": "3 de 4 jogadores falharam mais de duas vezes na perseguição da missão 3. A curva de dificuldade sobe antes de o jogador ter acesso a upgrades relevantes.",
+        "severity": "HIGH",
+        "category": "BALANCE",
+        "confidence": 0.88
+      },
+      {
+        "id": "ins-002",
+        "title": "Upgrades sem feedback perceptível",
+        "description": "O turbo comprado não produz mudança sensorial clara. Jogadores relatam ter gasto dinheiro sem retorno percebido, o que reduz a motivação econômica.",
+        "severity": "MEDIUM",
+        "category": "UX",
+        "confidence": 0.76
+      },
+      {
+        "id": "ins-003",
+        "title": "Stutter ao instanciar viaturas",
+        "description": "Freeze consistente de 1,8s a 2,3s no momento em que a polícia entra em cena. Provável carregamento de assets em tempo de execução.",
+        "severity": "HIGH",
+        "category": "PERFORMANCE",
+        "confidence": 0.94
+      }
+    ],
+    "answers": [
+      { "question": "Como você avalia a sensação de dirigibilidade dos carros?", "answer": "4 de 5" },
+      { "question": "Qual parte do jogo prendeu mais a sua atenção?", "answer": "Corridas de rua" },
+      { "question": "Quais problemas você percebeu durante a sessão?", "answer": "Queda de FPS, Controles não respondiam" },
+      { "question": "O que você mudaria no jogo antes do lançamento?", "answer": "Deixaria a missão 3 mais fácil ou daria mais dinheiro nas corridas iniciais. E o turbo precisa fazer diferença de verdade." },
+      { "question": "Você recomendaria este jogo para um amigo?", "answer": "Sim" }
+    ]
+  },
+  {
+    "id": "session-002",
+    "testId": "test-001",
+    "testTitle": "Exploração Livre + Telemetria - Modo Carreira",
+    "gameId": "game-001",
+    "gameName": "Racha de Rua",
+    "playerId": "player-003",
+    "playerName": "Beatriz Rocha",
+    "playerLevel": 11,
+    "durationSeconds": 1080,
+    "feedbackQuality": 3.8,
+    "bugsFound": 1,
+    "overallRating": 3.9,
+    "xpEarned": 120,
+    "rewardCents": 12000,
+    "rewardStatus": "VALIDATED",
+    "recordedAt": "2026-08-31T19:02:00.000Z",
+    "videoUrl": null,
+    "transcript": "Entrei direto na corrida, pulei a customização. [00:03] O controle é fácil de pegar. [00:08] Achei o menu de peças confuso, não entendi o que cada número significa. [00:12] Aqui o carro atravessou o muro, achei engraçado. [00:16] Terminei a missão 3 na segunda tentativa. Gostei do jogo, mas achei repetitivo depois da quarta corrida.",
+    "timeline": [
+      { "id": "ev-010", "atSecond": 30, "type": "CHECKPOINT", "label": "Customização pulada" },
+      { "id": "ev-011", "atSecond": 480, "type": "COMMENT", "label": "Menu de peças confuso", "detail": "Atributos numéricos sem legenda" },
+      { "id": "ev-012", "atSecond": 720, "type": "BUG", "label": "Colisão falhou no muro da fase 2", "detail": "Carro atravessou geometria do cenário" },
+      { "id": "ev-013", "atSecond": 960, "type": "CHECKPOINT", "label": "Missão 3 concluída" },
+      { "id": "ev-014", "atSecond": 1050, "type": "COMMENT", "label": "Sensação de repetição", "detail": "A partir da 4ª corrida" }
+    ],
+    "insights": [
+      {
+        "id": "ins-004",
+        "title": "Atributos de peças sem legenda",
+        "description": "Os números da loja de peças não têm unidade nem comparação com o equipamento atual, deixando a decisão de compra às cegas.",
+        "severity": "MEDIUM",
+        "category": "UX",
+        "confidence": 0.81
+      },
+      {
+        "id": "ins-005",
+        "title": "Colisor ausente no muro da fase 2",
+        "description": "O carro atravessa a geometria na curva final da fase 2. Reproduzido em 2 sessões distintas.",
+        "severity": "MEDIUM",
+        "category": "BUG",
+        "confidence": 0.9
+      }
+    ],
+    "answers": [
+      { "question": "Como você avalia a sensação de dirigibilidade dos carros?", "answer": "4 de 5" },
+      { "question": "Qual parte do jogo prendeu mais a sua atenção?", "answer": "Fuga da polícia" },
+      { "question": "Quais problemas você percebeu durante a sessão?", "answer": "Bug visual" },
+      { "question": "O que você mudaria no jogo antes do lançamento?", "answer": "Mais variedade de pistas, enjoei rápido." },
+      { "question": "Você recomendaria este jogo para um amigo?", "answer": "Sim" }
+    ]
+  },
+  {
+    "id": "session-003",
+    "testId": "test-001",
+    "testTitle": "Exploração Livre + Telemetria - Modo Carreira",
+    "gameId": "game-001",
+    "gameName": "Racha de Rua",
+    "playerId": "player-006",
+    "playerName": "Rafael Souza",
+    "playerLevel": 8,
+    "durationSeconds": 1620,
+    "feedbackQuality": 4.9,
+    "bugsFound": 4,
+    "overallRating": 4.6,
+    "xpEarned": 190,
+    "rewardCents": 15000,
+    "rewardStatus": "PAID",
+    "recordedAt": "2026-08-30T22:40:00.000Z",
+    "videoUrl": null,
+    "transcript": "Vou narrar tudo. [00:01] A tela inicial demora uns 6 segundos pra carregar, isso é bastante. [00:05] Customização muito completa, gostei das opções de pintura. [00:10] O som do motor muda conforme o RPM, detalhe muito bom. [00:15] Aqui, olha: quando eu bato de frente o carro fica preso no cenário e preciso reiniciar. [00:18] Segunda vez que a polícia trava o jogo por 2 segundos. [00:22] O HUD some quando entro no túnel. [00:25] Missão 3 muito punitiva, morri 4 vezes até passar. [00:27] Mas o jogo tem alma, o clima é excelente.",
+    "timeline": [
+      { "id": "ev-020", "atSecond": 6, "type": "BUG", "label": "Carregamento inicial de 6s", "detail": "Acima da meta de 3s" },
+      { "id": "ev-021", "atSecond": 300, "type": "HIGHLIGHT", "label": "Elogio à customização" },
+      { "id": "ev-022", "atSecond": 600, "type": "HIGHLIGHT", "label": "Elogio ao áudio do motor" },
+      { "id": "ev-023", "atSecond": 900, "type": "BUG", "label": "Carro preso no cenário após colisão frontal", "detail": "Exige reinício da corrida" },
+      { "id": "ev-024", "atSecond": 1080, "type": "BUG", "label": "Freeze na entrada da polícia" },
+      { "id": "ev-025", "atSecond": 1320, "type": "BUG", "label": "HUD desaparece dentro do túnel" },
+      { "id": "ev-026", "atSecond": 1500, "type": "DEATH", "label": "4ª falha na missão 3" },
+      { "id": "ev-027", "atSecond": 1590, "type": "HIGHLIGHT", "label": "Avaliação final positiva" }
+    ],
+    "insights": [
+      {
+        "id": "ins-006",
+        "title": "HUD oculto em áreas com baixa luminosidade",
+        "description": "O HUD usa blending aditivo e some contra o fundo escuro do túnel. Afeta a leitura de velocidade em um trecho crítico.",
+        "severity": "MEDIUM",
+        "category": "UX",
+        "confidence": 0.85
+      },
+      {
+        "id": "ins-007",
+        "title": "Confirmação do pico da missão 3",
+        "description": "Quarta sessão consecutiva com múltiplas falhas na mesma missão. O padrão é consistente entre jogadores de níveis diferentes.",
+        "severity": "HIGH",
+        "category": "BALANCE",
+        "confidence": 0.93
+      }
+    ],
+    "answers": [
+      { "question": "Como você avalia a sensação de dirigibilidade dos carros?", "answer": "5 de 5" },
+      { "question": "Qual parte do jogo prendeu mais a sua atenção?", "answer": "Customização do carro" },
+      { "question": "Quais problemas você percebeu durante a sessão?", "answer": "Queda de FPS, Bug visual" },
+      { "question": "O que você mudaria no jogo antes do lançamento?", "answer": "Otimizar o carregamento inicial, arrumar o HUD no túnel e revisar a missão 3. O resto está muito bom." },
+      { "question": "Você recomendaria este jogo para um amigo?", "answer": "Sim" }
+    ]
+  },
+  {
+    "id": "session-004",
+    "testId": "test-001",
+    "testTitle": "Exploração Livre + Telemetria - Modo Carreira",
+    "gameId": "game-001",
+    "gameName": "Racha de Rua",
+    "playerId": "player-007",
+    "playerName": "Juliana Castro",
+    "playerLevel": 30,
+    "durationSeconds": 900,
+    "feedbackQuality": 3.2,
+    "bugsFound": 0,
+    "overallRating": 3.4,
+    "xpEarned": 90,
+    "rewardCents": 15000,
+    "rewardStatus": "PENDING",
+    "recordedAt": "2026-08-29T18:25:00.000Z",
+    "videoUrl": null,
+    "transcript": "Joguei umas quatro corridas. É legal, mas não é o meu estilo de jogo. [00:09] Achei a dificuldade estranha, sobe muito rápido. [00:14] Parei aqui.",
+    "timeline": [
+      { "id": "ev-030", "atSecond": 120, "type": "CHECKPOINT", "label": "Primeira corrida concluída" },
+      { "id": "ev-031", "atSecond": 540, "type": "COMMENT", "label": "Dificuldade sobe rápido demais" },
+      { "id": "ev-032", "atSecond": 870, "type": "RAGE_QUIT", "label": "Sessão encerrada antes do tempo mínimo" }
+    ],
+    "insights": [
+      {
+        "id": "ins-008",
+        "title": "Abandono precoce por desalinhamento de gênero",
+        "description": "Jogadora com histórico em RPG e puzzle abandonou aos 15 minutos. Vale estreitar o filtro de gênero do público-alvo deste teste.",
+        "severity": "LOW",
+        "category": "ENGAGEMENT",
+        "confidence": 0.64
+      }
+    ],
+    "answers": [
+      { "question": "Como você avalia a sensação de dirigibilidade dos carros?", "answer": "3 de 5" },
+      { "question": "Qual parte do jogo prendeu mais a sua atenção?", "answer": "Nenhuma" },
+      { "question": "Quais problemas você percebeu durante a sessão?", "answer": "Nenhum problema" },
+      { "question": "O que você mudaria no jogo antes do lançamento?", "answer": "Nada em especial, só não é pra mim." },
+      { "question": "Você recomendaria este jogo para um amigo?", "answer": "Não" }
+    ]
+  },
+  {
+    "id": "session-005",
+    "testId": "test-002",
+    "testTitle": "Teste A/B - Curva de dificuldade da perseguição",
+    "gameId": "game-001",
+    "gameName": "Racha de Rua",
+    "playerId": "player-002",
+    "playerName": "Carlos Mendes",
+    "playerLevel": 22,
+    "durationSeconds": 2040,
+    "feedbackQuality": 4.7,
+    "bugsFound": 1,
+    "overallRating": 4.4,
+    "xpEarned": 210,
+    "rewardCents": 20000,
+    "rewardStatus": "VALIDATED",
+    "recordedAt": "2026-08-30T20:00:00.000Z",
+    "videoUrl": null,
+    "transcript": "Versão A: a polícia aparece depois de 40 segundos e são duas viaturas. Deu pra respirar. [00:14] Versão B: quatro viaturas quase imediatamente, não deu chance nenhuma. Passei na versão A de primeira e na B só na quarta tentativa. [00:31] A versão A é claramente melhor pra quem está começando.",
+    "timeline": [
+      { "id": "ev-040", "atSecond": 300, "type": "CHECKPOINT", "label": "Variante A concluída (1ª tentativa)" },
+      { "id": "ev-041", "atSecond": 900, "type": "DEATH", "label": "Variante B - falha 1" },
+      { "id": "ev-042", "atSecond": 1200, "type": "DEATH", "label": "Variante B - falha 2" },
+      { "id": "ev-043", "atSecond": 1500, "type": "DEATH", "label": "Variante B - falha 3" },
+      { "id": "ev-044", "atSecond": 1860, "type": "CHECKPOINT", "label": "Variante B concluída (4ª tentativa)" },
+      { "id": "ev-045", "atSecond": 1980, "type": "BUG", "label": "Contador de viaturas negativo na variante B" }
+    ],
+    "insights": [
+      {
+        "id": "ins-010",
+        "title": "Variante A vence em conclusão na primeira tentativa",
+        "description": "Taxa de conclusão em 1ª tentativa: 72% na variante A contra 24% na variante B. A diferença é consistente em todos os níveis de jogador.",
+        "severity": "HIGH",
+        "category": "BALANCE",
+        "confidence": 0.91
+      }
+    ],
+    "answers": [
+      { "question": "Qual foi o nível de dificuldade da perseguição?", "answer": "4 de 5" },
+      { "question": "Você terminou a missão na primeira tentativa?", "answer": "Não, precisei de mais de 3 tentativas" },
+      { "question": "Descreva o momento em que a missão ficou mais frustrante.", "answer": "Na variante B, quando aparecem quatro viaturas antes de eu conseguir acelerar." }
+    ]
+  },
+  {
+    "id": "session-006",
+    "testId": "test-002",
+    "testTitle": "Teste A/B - Curva de dificuldade da perseguição",
+    "gameId": "game-001",
+    "gameName": "Racha de Rua",
+    "playerId": "player-007",
+    "playerName": "Juliana Castro",
+    "playerLevel": 30,
+    "durationSeconds": 1740,
+    "feedbackQuality": 4.1,
+    "bugsFound": 0,
+    "overallRating": 4.0,
+    "xpEarned": 170,
+    "rewardCents": 20000,
+    "rewardStatus": "PAID",
+    "recordedAt": "2026-08-28T21:30:00.000Z",
+    "videoUrl": null,
+    "transcript": "As duas versões são jogáveis pra mim, mas a segunda exige decorar a rota. [00:20] Se o objetivo é público casual, a primeira é melhor.",
+    "timeline": [
+      { "id": "ev-050", "atSecond": 360, "type": "CHECKPOINT", "label": "Variante A concluída (1ª tentativa)" },
+      { "id": "ev-051", "atSecond": 1080, "type": "DEATH", "label": "Variante B - falha 1" },
+      { "id": "ev-052", "atSecond": 1620, "type": "CHECKPOINT", "label": "Variante B concluída (2ª tentativa)" }
+    ],
+    "insights": [
+      {
+        "id": "ins-011",
+        "title": "Variante B exige memorização de rota",
+        "description": "Jogadores experientes só concluem a variante B após aprender o traçado, o que a torna hostil a uma primeira sessão.",
+        "severity": "MEDIUM",
+        "category": "BALANCE",
+        "confidence": 0.79
+      }
+    ],
+    "answers": [
+      { "question": "Qual foi o nível de dificuldade da perseguição?", "answer": "3 de 5" },
+      { "question": "Você terminou a missão na primeira tentativa?", "answer": "Não, precisei de 2 a 3 tentativas" },
+      { "question": "Descreva o momento em que a missão ficou mais frustrante.", "answer": "Quando percebi que precisava decorar onde ficam os becos para escapar." }
+    ]
+  },
+  {
+    "id": "session-007",
+    "testId": "test-003",
+    "testTitle": "Tarefas Guiadas - Tutorial e primeiras 3 ilhas",
+    "gameId": "game-002",
+    "gameName": "Island Explorer",
+    "playerId": "player-001",
+    "playerName": "Maria Tester",
+    "playerLevel": 15,
+    "durationSeconds": 1320,
+    "feedbackQuality": 4.4,
+    "bugsFound": 2,
+    "overallRating": 4.1,
+    "xpEarned": 140,
+    "rewardCents": 12000,
+    "rewardStatus": "PENDING",
+    "recordedAt": "2026-08-29T21:00:00.000Z",
+    "videoUrl": null,
+    "transcript": "O abrigo foi tranquilo de construir, o tutorial explica bem. [00:07] Já a jangada eu não achei a receita, fiquei uns 4 minutos rodando na praia. [00:14] Achei: estava numa aba escondida do menu de crafting. [00:18] Cheguei na segunda ilha. A navegação é gostosa, mas o mapa não mostra onde eu estou.",
+    "timeline": [
+      { "id": "ev-060", "atSecond": 180, "type": "CHECKPOINT", "label": "Abrigo construído" },
+      { "id": "ev-061", "atSecond": 420, "type": "COMMENT", "label": "Receita da jangada não encontrada" },
+      { "id": "ev-062", "atSecond": 660, "type": "BUG", "label": "Aba de crafting sem indicação visual" },
+      { "id": "ev-063", "atSecond": 840, "type": "CHECKPOINT", "label": "Jangada fabricada" },
+      { "id": "ev-064", "atSecond": 1080, "type": "CHECKPOINT", "label": "Segunda ilha alcançada" },
+      { "id": "ev-065", "atSecond": 1260, "type": "BUG", "label": "Mapa sem marcador do jogador" }
+    ],
+    "insights": [
+      {
+        "id": "ins-012",
+        "title": "Receita da jangada escondida atrás de aba sem affordance",
+        "description": "4 de 6 jogadores levaram mais de 3 minutos para encontrar a receita. A aba secundária do crafting não tem indicação visual de que existe.",
+        "severity": "HIGH",
+        "category": "UX",
+        "confidence": 0.89
+      },
+      {
+        "id": "ins-013",
+        "title": "Mapa sem posição do jogador",
+        "description": "A ausência de marcador transforma a navegação entre ilhas em tentativa e erro.",
+        "severity": "MEDIUM",
+        "category": "UX",
+        "confidence": 0.83
+      }
+    ],
+    "answers": [
+      { "question": "O tutorial deixou claro o que fazer?", "answer": "4 de 5" },
+      { "question": "Quais tarefas você concluiu?", "answer": "Construir abrigo, Fabricar jangada, Alcançar a 2ª ilha" },
+      { "question": "Em que momento você ficou travado sem saber o que fazer?", "answer": "Na receita da jangada. A aba de crafting não parece clicável." }
+    ]
+  },
+  {
+    "id": "session-008",
+    "testId": "test-005",
+    "testTitle": "Exploração Livre - Balanceamento da loja de peças",
+    "gameId": "game-001",
+    "gameName": "Racha de Rua",
+    "playerId": "player-001",
+    "playerName": "Maria Tester",
+    "playerLevel": 14,
+    "durationSeconds": 1860,
+    "feedbackQuality": 4.0,
+    "bugsFound": 1,
+    "overallRating": 3.8,
+    "xpEarned": 120,
+    "rewardCents": 10000,
+    "rewardStatus": "PAID",
+    "recordedAt": "2026-07-10T18:00:00.000Z",
+    "videoUrl": null,
+    "transcript": "Corri seis vezes pra juntar dinheiro pro motor novo. Deu muito trabalho. [00:22] A peça custa quase o dobro do que dá pra ganhar em uma hora de jogo. [00:29] Fora isso, a loja é bonita e fácil de navegar.",
+    "timeline": [
+      { "id": "ev-070", "atSecond": 600, "type": "CHECKPOINT", "label": "3 corridas concluídas" },
+      { "id": "ev-071", "atSecond": 1320, "type": "COMMENT", "label": "Economia percebida como lenta" },
+      { "id": "ev-072", "atSecond": 1740, "type": "BUG", "label": "Preço da peça muda ao reabrir a loja" }
+    ],
+    "insights": [
+      {
+        "id": "ins-014",
+        "title": "Economia inicial exige grinding excessivo",
+        "description": "O motor de nível 2 custa cerca de 6 corridas. A média das sessões mostra abandono antes da compra da primeira peça relevante.",
+        "severity": "HIGH",
+        "category": "BALANCE",
+        "confidence": 0.87
+      }
+    ],
+    "answers": [
+      { "question": "O dinheiro ganho nas corridas parece justo?", "answer": "2 de 5" },
+      { "question": "Qual peça pareceu cara demais para o benefício que dá?", "answer": "O motor V6 de nível 2. Custa 6 corridas e dá pouca diferença." }
+    ]
+  }
+]

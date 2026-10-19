@@ -1,0 +1,811 @@
+// Modelo de dados do OrbitPlay.
+//
+// As respostas da API seguem src/contracts (espelho de orbitplay-app/src/types);
+// o que aparece lá como número agregado — estatísticas do jogo, dashboards,
+// relatórios — é calculado a partir destas tabelas, não guardado.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+  STUDIO
+  PLAYER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+
+/// Dentro da organização: VIEW só lê, EDIT mexe em jogos/testes/builds, MANAGE também paga.
+enum StudioPermission {
+  MANAGE
+  EDIT
+  VIEW
+}
+
+enum GameStatus {
+  ACTIVE
+  DRAFT
+  PAUSED
+  ARCHIVED
+}
+
+enum TestModel {
+  TELEMETRY
+  FREE_EXPLORATION
+  AB_TEST
+  AB_IMAGES
+}
+
+/// DRAFT também é "aguardando pagamento": o teste só vai a ACTIVE com o pedido pago.
+enum TestStatus {
+  DRAFT
+  ACTIVE
+  FULL
+  PROCESSING
+  FINISHED
+  PAUSED
+}
+
+enum ParticipationStatus {
+  IN_PROGRESS
+  PENDING_REVIEW
+  COMPLETED
+  REJECTED
+}
+
+enum RewardStatus {
+  PENDING
+  VALIDATED
+  PAID
+  REJECTED
+}
+
+enum BuildStatus {
+  PROCESSING
+  VALID
+  INVALID
+}
+
+enum PaymentMethod {
+  PIX
+  BOLETO
+  CARD
+  PAYPAL
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELED
+  EXPIRED
+}
+
+enum WithdrawalStatus {
+  REQUESTED
+  PAID
+  REJECTED
+}
+
+enum LedgerType {
+  REWARD
+  WITHDRAWAL
+  ADJUSTMENT
+}
+
+/// PENDING ainda não conta no saldo; AVAILABLE conta; CANCELED não conta mais.
+enum LedgerStatus {
+  PENDING
+  AVAILABLE
+  CANCELED
+}
+
+enum InsightKind {
+  INSIGHT
+  FINDING
+  SUGGESTION
+}
+
+/// Em que bloco o insight aparece: relatório geral ou os dois blocos do plug-in.
+enum InsightScope {
+  REPORT
+  HEATMAP
+  TRIGGER
+}
+
+// ---------------------------------------------------------------------------
+// Contas
+// ---------------------------------------------------------------------------
+
+model User {
+  id                  String            @id @default(cuid())
+  name                String
+  email               String            @unique
+  passwordHash        String
+  role                UserRole
+  status              UserStatus        @default(ACTIVE)
+  avatarUrl           String?
+  studioId            String?
+  studio              Studio?           @relation(fields: [studioId], references: [id])
+  studioPermission    StudioPermission?
+  /// Tokens emitidos antes disto deixam de valer (troca de senha, papel ou desativação).
+  sessionsValidAfter  DateTime?
+  /// Idioma da interface — o seletor "PT" da navbar.
+  locale              String            @default("pt-BR")
+  /// "Último acesso" da tabela de Gerenciamento de acessos.
+  lastLoginAt         DateTime?
+  /// Poderes de equipe além da permissão do estúdio: MANAGE_USERS, DELETE_USERS
+  /// (colunas "Criar/Editar usuário" e "Excluir usuário" de Gerenciamento de acessos).
+  teamPermissions     String[]          @default([])
+  /// Saiu da equipe (excluído em Gerenciamento de acessos). Suspenso é só INACTIVE.
+  removedFromStudioAt DateTime?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  player           PlayerProfile?
+  participations   Participation[]
+  messages         ChatMessage[]
+  reactions        MessageReaction[]
+  resetTokens      PasswordResetToken[]
+  achievements     PlayerAchievement[]
+  gameAchievements PlayerGameAchievement[]
+  ledger           LedgerEntry[]
+  withdrawals      Withdrawal[]
+  auditLogs        AuditLog[]
+  notifications    Notification[]
+  groups           StudioGroupMember[]
+  gameAccess       GameAccess[]
+  retestInvites    RetestInvite[]
+
+  @@index([studioId])
+  @@index([role, status])
+}
+
+/// A organização do handoff: jogos, testes e pedidos pertencem a ela, não a uma conta.
+model Studio {
+  id           String   @id @default(cuid())
+  name         String
+  cnpj         String?
+  website      String?
+  balanceCents Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  members User[]
+  games   Game[]
+  orders  Order[]
+  groups  StudioGroup[]
+}
+
+/// Grupo de membros do estúdio — "Diretores", "QA", "Analitics" no modal "Adicionar membro" (Figma `1188:10038`).
+model StudioGroup {
+  id        String   @id @default(cuid())
+  studioId  String
+  studio    Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  name      String
+  createdAt DateTime @default(now())
+
+  members    StudioGroupMember[]
+  gameAccess GameAccess[]
+
+  @@unique([studioId, name])
+}
+
+model StudioGroupMember {
+  groupId String
+  group   StudioGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId  String
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([groupId, userId])
+}
+
+model PlayerProfile {
+  userId              String    @id
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  level               Int       @default(1)
+  xp                  Int       @default(0)
+  xpToNextLevel       Int       @default(500)
+  balanceCents        Int       @default(0)
+  pendingBalanceCents Int       @default(0)
+  /// "Qualidade de Feedback", de 0 a 10.
+  rating              Float     @default(0)
+  tier                String    @default("NOVATO")
+  /// Soma das sessões enviadas; o contrato mostra em horas.
+  secondsPlayed       Int       @default(0)
+  completedSessions   Int       @default(0)
+  /// Total histórico — pode passar das conquistas listadas na plataforma.
+  achievementsCount   Int       @default(0)
+  // Elegibilidade para o público dos testes (etapa 4).
+  location            String    @default("BRASIL")
+  birthDate           DateTime?
+  playerType          String    @default("CASUAL")
+  archetype           String    @default("EXPLORER")
+  /// Viu o tutorial do teste — da segunda vez o modal final mostra "Rever tutorial" (Figma `224:7540`).
+  tutorialSeenAt      DateTime?
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Só o hash fica no banco; o token em si vai no link do e-mail.
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Jogos, builds e testes
+// ---------------------------------------------------------------------------
+
+model Game {
+  id               String     @id @default(cuid())
+  studioId         String
+  studio           Studio     @relation(fields: [studioId], references: [id])
+  name             String
+  shortDescription String     @default("")
+  description      String     @default("")
+  bannerUrl        String
+  thumbnailUrl     String
+  status           GameStatus @default(DRAFT)
+  genres           String[]
+  platforms        String[]
+  buildVersion     String     @default("0.1.0-draft")
+  estimatedMinutes Int        @default(0)
+  isNew            Boolean    @default(true)
+  specs            Json
+  // Cadastro do "Novo jogo" (Figma `1180:3359` e `1187:8743`)
+  tagline          String     @default("")
+  subGenres        String[]
+  gameModes        String[]
+  engine           String?
+  developmentStage String?
+  ageRating        String?
+  languages        String[]
+  logoUrl          String?
+  trailerUrl       String?
+  /// "Finalizar" do cadastro: com todos os campos obrigatórios preenchidos.
+  setupCompletedAt DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  builds       Build[]
+  playtests    Playtest[]
+  messages     ChatMessage[]
+  achievements GameAchievement[]
+  access       GameAccess[]
+  pluginKeys   PluginKey[]
+  pluginConfig GamePluginConfig?
+
+  @@index([studioId])
+}
+
+/// "Responsáveis e permissões" do jogo (Figma `1187:9418`): um membro ou um grupo e o que ele pode.
+model GameAccess {
+  id          String       @id @default(cuid())
+  gameId      String
+  game        Game         @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  userId      String?
+  user        User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  groupId     String?
+  group       StudioGroup? @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  /// MANAGE_ACCESS, EDIT_INFO, MANAGE_TESTS, VIEW_REPORTS.
+  permissions String[]
+  createdAt   DateTime     @default(now())
+
+  @@unique([gameId, userId])
+  @@unique([gameId, groupId])
+}
+
+/// "Código de acesso" que o OrbitPlug-in pede na Unity (Figma `423:2774`). Só o hash fica no banco.
+model PluginKey {
+  id          String    @id @default(cuid())
+  gameId      String
+  game        Game      @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  codeHash    String    @unique
+  last4       String
+  name        String    @default("")
+  createdById String
+  createdAt   DateTime  @default(now())
+  lastUsedAt  DateTime?
+  revokedAt   DateTime?
+
+  @@index([gameId])
+}
+
+/// Mapas e gatilhos configurados no Inspector da Unity (Figma `423:3000`), enviados pelo plug-in.
+model GamePluginConfig {
+  gameId     String   @id
+  game       Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  sdkVersion String?
+  /// `PluginMapConfig[]`.
+  maps       Json     @default("[]")
+  /// `PluginTriggerConfig[]`.
+  triggers   Json     @default("[]")
+  updatedAt  DateTime @updatedAt
+}
+
+model Build {
+  id               String      @id @default(cuid())
+  gameId           String
+  game             Game        @relation(fields: [gameId], references: [id])
+  uploadedById     String
+  fileName         String
+  sizeMb           Float
+  version          String
+  storageKey       String?
+  sha256           String?
+  status           BuildStatus @default(PROCESSING)
+  error            String?
+  pluginDetected   Boolean     @default(false)
+  /// "Remover Plug-in" desliga sem apagar o que foi detectado.
+  pluginEnabled    Boolean     @default(false)
+  pluginSdkVersion String?
+  /// `PluginDetection[]` com a configuração escolhida pelo estúdio.
+  pluginTriggers   Json        @default("[]")
+  pluginHeatmaps   Json        @default("[]")
+  /// Sistemas em que a build roda — "Compatível com MAC / Windows" (Figma `319:8624`).
+  platforms        String[]
+  createdAt        DateTime    @default(now())
+
+  playtests Playtest[]
+
+  @@index([gameId])
+}
+
+model Playtest {
+  id                    String     @id @default(cuid())
+  gameId                String
+  game                  Game       @relation(fields: [gameId], references: [id])
+  buildId               String?
+  build                 Build?     @relation(fields: [buildId], references: [id])
+  createdById           String?
+  title                 String
+  model                 TestModel
+  status                TestStatus @default(DRAFT)
+  kind                  String     @default("DEMO ABERTA")
+  plugin                Boolean    @default(false)
+  instructions          String     @default("")
+  requiresRecording     Boolean    @default(true)
+  requiresMicrophone    Boolean    @default(false)
+  requiresWebcam        Boolean    @default(false)
+  /// "Jogável com controle*" da etapa 3.
+  requiresController    Boolean    @default(false)
+  /// Só entra quem tem o tier ELITE — a aba "Exclusivos ELITE" do catálogo.
+  eliteOnly             Boolean    @default(false)
+  // Público
+  locations             String[]
+  playerType            String
+  archetype             String
+  minAge                Int
+  maxAge                Int
+  // Orçamento — sempre calculado pela API
+  slots                 Int
+  untilDisabled         Boolean    @default(false)
+  basePriceCents        Int
+  audienceCents         Int
+  boostCents            Int
+  pricePerTestCents     Int
+  totalCents            Int
+  rewardPerSessionCents Int
+  durationDays          Int
+  currentParticipants   Int        @default(0)
+  estimatedMinutes      Int        @default(25)
+  /// Cópia do nome e do tamanho da build, para testes antigos sem `Build`.
+  buildFileName         String     @default("")
+  buildSizeMb           Float      @default(0)
+  /// Mapa de calor renderizado por cena: `{ "Fase_01": "url" }`.
+  heatmapImages         Json       @default("{}")
+  createdAt             DateTime   @default(now())
+  startsAt              DateTime?
+  expiresAt             DateTime?
+  endedAt               DateTime?
+
+  questions      TestQuestion[]
+  participations Participation[]
+  insights       Insight[]
+  order          Order?
+  retestInvites  RetestInvite[]
+
+  @@index([gameId])
+  @@index([status])
+}
+
+/// O id vem do app (`q-...`), por isso a chave inclui o teste.
+model TestQuestion {
+  playtestId    String
+  playtest      Playtest @relation(fields: [playtestId], references: [id], onDelete: Cascade)
+  id            String
+  position      Int
+  type          String
+  label         String
+  helperText    String?
+  required      Boolean
+  imageUrl      String?
+  /// Nas grades, `options` são as linhas e `columns` as colunas.
+  options       String[]
+  columns       String[] @default([])
+  scaleMin      Int?
+  scaleMax      Int?
+  scaleMinLabel String?
+  scaleMaxLabel String?
+
+  @@id([playtestId, id])
+}
+
+// ---------------------------------------------------------------------------
+// Pagamento
+// ---------------------------------------------------------------------------
+
+/// Um pedido por teste: tentar de novo reaproveita o mesmo, e pago nunca cobra outra vez.
+model Order {
+  id            String        @id @default(cuid())
+  studioId      String
+  studio        Studio        @relation(fields: [studioId], references: [id])
+  playtestId    String        @unique
+  playtest      Playtest      @relation(fields: [playtestId], references: [id])
+  createdById   String
+  method        PaymentMethod
+  status        PaymentStatus @default(PENDING)
+  amountCents   Int
+  /// Memória de cálculo do resumo da compra.
+  breakdown     Json
+  provider      String
+  providerRef   String?
+  /// Pix copia-e-cola, linha do boleto, link do cartão — depende do método.
+  instructions  Json?
+  receiptNumber String?       @unique
+  failureReason String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  paidAt        DateTime?
+}
+
+// ---------------------------------------------------------------------------
+// Participação, sessão e análise
+// ---------------------------------------------------------------------------
+
+model Participation {
+  id              String              @id @default(cuid())
+  playtestId      String
+  playtest        Playtest            @relation(fields: [playtestId], references: [id])
+  playerId        String
+  player          User                @relation(fields: [playerId], references: [id])
+  status          ParticipationStatus @default(IN_PROGRESS)
+  /// 0 a 1 — a barra de progresso nas tabelas do jogador.
+  progress        Float               @default(0)
+  rewardCents     Int
+  rewardStatus    RewardStatus        @default(PENDING)
+  xpEarned        Int                 @default(0)
+  consentAt       DateTime?
+  videoKey        String?
+  /// `[{ at, text, aiNote? }]` — transcrição da gravação, que o jogador revê antes do formulário.
+  transcript      Json                @default("[]")
+  startedAt       DateTime            @default(now())
+  finishedAt      DateTime?
+  durationSeconds Int?
+
+  session Session?
+  events  SessionEvent[]
+
+  @@unique([playtestId, playerId])
+  @@index([playerId])
+}
+
+model Session {
+  id              String        @id @default(cuid())
+  participationId String        @unique
+  participation   Participation @relation(fields: [participationId], references: [id])
+  durationSeconds Int
+  bugsFound       Int           @default(0)
+  /// 0 a 10.
+  feedbackQuality Float
+  /// 0 a 5 — a primeira pergunta de escala do formulário, quando há.
+  overallRating   Float?
+  /// Resposta por id de pergunta.
+  answers         Json
+  /// `{ classification, evaluation, telemetry }` da análise de IA.
+  analysis        Json?
+  /// Memória de cálculo da tela de conclusão (`SessionOutcome`).
+  outcome         Json
+  /// O `SessionResult` devolvido no envio — um segundo envio recebe o mesmo.
+  result          Json
+  validatedAt     DateTime?
+  validatedById   String?
+  validationNote  String?
+  /// "Avaliar/agradecer" do estúdio, de 1 a 5.
+  studioRating    Int?
+  studioMessage   String?
+  /// Tempo de preenchimento do formulário — "Tempo médio da avaliação" do relatório.
+  formSeconds     Int?
+  submittedAt     DateTime      @default(now())
+
+  insights      Insight[]
+  retestInvites RetestInvite[]
+}
+
+/// "Solicitar novo teste" (Figma `329:9178`): o estúdio chama o mesmo tester para outro teste do jogo.
+model RetestInvite {
+  id         String    @id @default(cuid())
+  sessionId  String
+  session    Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  playerId   String
+  player     User      @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  playtestId String
+  playtest   Playtest  @relation(fields: [playtestId], references: [id], onDelete: Cascade)
+  message    String?
+  createdAt  DateTime  @default(now())
+  acceptedAt DateTime?
+
+  @@unique([playtestId, playerId])
+}
+
+/// Eventos com o tempo da sessão: bugs, checkpoints, microfone/webcam e gatilhos do plug-in.
+model SessionEvent {
+  id              String        @id @default(cuid())
+  participationId String
+  participation   Participation @relation(fields: [participationId], references: [id], onDelete: Cascade)
+  atSecond        Int
+  type            String
+  label           String
+  detail          String?
+  payload         Json?
+  createdAt       DateTime      @default(now())
+
+  @@index([participationId])
+}
+
+model Insight {
+  id           String       @id @default(cuid())
+  playtestId   String
+  playtest     Playtest     @relation(fields: [playtestId], references: [id], onDelete: Cascade)
+  sessionId    String?
+  session      Session?     @relation(fields: [sessionId], references: [id])
+  kind         InsightKind  @default(INSIGHT)
+  scope        InsightScope @default(REPORT)
+  title        String
+  category     String
+  categoryTone String       @default("sapphire")
+  text         String
+  severity     String?
+  confidence   Float?
+  /// Segundo da gravação em que o insight aparece — "Gravação - 05:15".
+  atSecond     Int?
+  createdAt    DateTime     @default(now())
+
+  @@index([playtestId])
+}
+
+// ---------------------------------------------------------------------------
+// Tabelas de preço — a etapa 1 e a etapa 4 leem daqui (Handoff, Tela 06 RN-03)
+// ---------------------------------------------------------------------------
+
+model TestModelConfig {
+  id                String   @id
+  name              String
+  tagline           String
+  description       String
+  deliversTitle     String
+  delivers          String[]
+  pricePerTestCents Int
+  recommended       Boolean  @default(false)
+  requiresPlugin    Boolean  @default(false)
+  icon              String
+  active            Boolean  @default(true)
+  position          Int      @default(0)
+}
+
+model PlayerTypeConfig {
+  id          String @id
+  name        String
+  description String
+  tier        String
+  extraCents  Int
+  position    Int    @default(0)
+}
+
+model ArchetypeConfig {
+  id          String @id
+  name        String
+  description String
+  position    Int    @default(0)
+}
+
+/// Valores soltos de configuração, como o preço do impulsionamento.
+model Setting {
+  key   String @id
+  value Json
+}
+
+// ---------------------------------------------------------------------------
+// Conquistas
+// ---------------------------------------------------------------------------
+
+model Achievement {
+  id          String  @id
+  name        String
+  description String
+  icon        String
+  xp          Int
+  /// Regra de desbloqueio (ver AchievementsService).
+  rule        String?
+
+  players PlayerAchievement[]
+}
+
+model PlayerAchievement {
+  playerId      String
+  player        User        @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  achievementId String
+  achievement   Achievement @relation(fields: [achievementId], references: [id])
+  unlockedAt    DateTime    @default(now())
+
+  @@id([playerId, achievementId])
+}
+
+/// Conquista da aba "Conquistas" do jogo. Sem `gameId`, vale para todos os jogos.
+model GameAchievement {
+  id          String  @id @default(cuid())
+  gameId      String?
+  game        Game?   @relation(fields: [gameId], references: [id])
+  title       String
+  description String
+  icon        String
+  rule        String?
+  position    Int     @default(0)
+
+  players PlayerGameAchievement[]
+}
+
+model PlayerGameAchievement {
+  playerId          String
+  player            User            @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  gameAchievementId String
+  gameAchievement   GameAchievement @relation(fields: [gameAchievementId], references: [id])
+  /// Em qual jogo foi conquistada (a conquista pode valer para todos).
+  gameId            String
+  unlockedAt        DateTime        @default(now())
+
+  @@id([playerId, gameAchievementId, gameId])
+}
+
+// ---------------------------------------------------------------------------
+// Comunidade
+// ---------------------------------------------------------------------------
+
+model CommunityChannel {
+  id       String @id
+  name     String
+  position Int    @default(0)
+
+  messages ChatMessage[]
+}
+
+model ChatMessage {
+  id        String           @id @default(cuid())
+  gameId    String
+  game      Game             @relation(fields: [gameId], references: [id])
+  channelId String
+  channel   CommunityChannel @relation(fields: [channelId], references: [id])
+  authorId  String
+  author    User             @relation(fields: [authorId], references: [id])
+  text      String
+  sentAt    DateTime         @default(now())
+  /// Moderação apaga logicamente (Handoff, Tela 15 RN-04).
+  deletedAt DateTime?
+
+  reactions MessageReaction[]
+
+  @@index([gameId, channelId, sentAt])
+}
+
+model MessageReaction {
+  messageId String
+  message   ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([messageId, userId])
+}
+
+// ---------------------------------------------------------------------------
+// Carteira do jogador
+// ---------------------------------------------------------------------------
+
+/// Extrato. O saldo do `PlayerProfile` é a soma das entradas AVAILABLE.
+model LedgerEntry {
+  id              String       @id @default(cuid())
+  playerId        String
+  player          User         @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  type            LedgerType
+  status          LedgerStatus
+  /// Positivo entra, negativo sai.
+  amountCents     Int
+  description     String
+  /// Uma recompensa por participação — é o que impede pagar duas vezes.
+  participationId String?      @unique
+  withdrawalId    String?
+  createdAt       DateTime     @default(now())
+
+  @@index([playerId, createdAt])
+}
+
+model Withdrawal {
+  id            String           @id @default(cuid())
+  playerId      String
+  player        User             @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  amountCents   Int
+  pixKey        String
+  status        WithdrawalStatus @default(REQUESTED)
+  note          String?
+  createdAt     DateTime         @default(now())
+  processedAt   DateTime?
+  processedById String?
+
+  @@index([playerId, status])
+}
+
+// ---------------------------------------------------------------------------
+// Notificações — o sino da navbar
+// ---------------------------------------------------------------------------
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// `NotificationType` do contrato.
+  type      String
+  title     String
+  body      String
+  /// Rota do app para onde o clique leva, ex.: "/player/games/game-101".
+  link      String?
+  data      Json?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Operação
+// ---------------------------------------------------------------------------
+
+/// Registro de auditoria da Central de usuários (Handoff, Tela 20 RN-05).
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String
+  actor      User     @relation(fields: [actorId], references: [id])
+  action     String
+  targetType String
+  targetId   String
+  data       Json?
+  createdAt  DateTime @default(now())
+
+  @@index([targetType, targetId])
+  @@index([createdAt])
+}
+
+/// Resposta guardada por `Idempotency-Key`: repetir a requisição devolve a mesma.
+model IdempotencyRecord {
+  userId     String
+  key        String
+  route      String
+  statusCode Int?
+  body       Json?
+  createdAt  DateTime @default(now())
+
+  @@id([userId, key])
+}

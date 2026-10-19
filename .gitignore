@@ -1,0 +1,12 @@
+node_modules
+dist
+# Builds, gravações e imagens enviadas
+storage
+coverage
+*.log
+*.tsbuildinfo
+.env
+.env.local
+
+# Banco local do projeto (npm run db:up)
+.pgdata

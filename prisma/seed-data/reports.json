@@ -1,0 +1,775 @@
+{
+  "studioDashboard": {
+    "highlights": {
+      "gamesTested": 2,
+      "testsRun": 45,
+      "gameplayHours": 62,
+      "averageRating": 8.4,
+      "engagement": 0.78,
+      "aiInsights": 124,
+      "testsWithPlugin": 29
+    },
+    "overview": {
+      "activeTests": 5,
+      "playersPlaying": 124,
+      "testsPerHour": 24.3
+    },
+    "keyFactors": {
+      "funFactor": 5,
+      "bugs": 124,
+      "retention": 0.71
+    },
+    "plugin": {
+      "activePoints": 15,
+      "triggers": 566,
+      "aiInsights": 124
+    },
+    "benchmark": [
+      {
+        "id": "bm-1",
+        "name": "Mombo Quest",
+        "progress": 0.57,
+        "rewardCents": 55
+      },
+      {
+        "id": "bm-2",
+        "name": "171",
+        "progress": 1,
+        "rewardCents": 55
+      },
+      {
+        "id": "bm-3",
+        "name": "DragonFable",
+        "progress": 0.21,
+        "rewardCents": 55
+      },
+      {
+        "id": "bm-4",
+        "name": "Feelings",
+        "progress": 0,
+        "rewardCents": 55
+      },
+      {
+        "id": "bm-5",
+        "name": "Feelings 2",
+        "progress": 0,
+        "rewardCents": 55
+      }
+    ],
+    "totalTests": 2554,
+    "ratingsOverTime": [
+      {
+        "label": "Mar",
+        "rating": 3.4
+      },
+      {
+        "label": "Abr",
+        "rating": 3.7
+      },
+      {
+        "label": "Mai",
+        "rating": 3.6
+      },
+      {
+        "label": "Jun",
+        "rating": 4
+      },
+      {
+        "label": "Jul",
+        "rating": 4.1
+      },
+      {
+        "label": "Ago",
+        "rating": 4.3
+      }
+    ]
+  },
+  "testReport": {
+    "testId": "test-001",
+    "testTitle": "Pista Terra v1.3",
+    "gameId": "game-001",
+    "kind": "DEMO ABERTA",
+    "status": "READY",
+    "description": "Escolha o formato ideal para validar sua hipótese: dados quantitativos, feedback qualitativo, comparação A/B ou exploração livre do jogo.",
+    "geral": {
+      "totalTests": 125,
+      "avgSessionSeconds": 1974,
+      "aiScore": 9.1,
+      "testers": 58,
+      "funFactor": 4.7,
+      "bugs": 109,
+      "retention": 0.78
+    },
+    "evolution": [
+      {
+        "label": "Semana 1",
+        "tests": 11
+      },
+      {
+        "label": "Semana 2",
+        "tests": 16
+      },
+      {
+        "label": "Semana 3",
+        "tests": 20
+      },
+      {
+        "label": "Semana 4",
+        "tests": 17
+      },
+      {
+        "label": "Semana 5",
+        "tests": 22
+      }
+    ],
+    "ratings": {
+      "totalQuestions": 8,
+      "avgSeconds": 554,
+      "dropoutRate": 0.1,
+      "scaled": {
+        "title": "Pergunta 01 - Quão divertido foi?",
+        "distribution": [
+          6,
+          9,
+          31,
+          44,
+          35
+        ],
+        "average": 4.6
+      },
+      "open": {
+        "title": "Pergunta 05 - O que mais te incomodou...",
+        "answers": 109,
+        "quotes": [
+          "“Uma parte do menu não funciona...”",
+          "“Adorei a temática”"
+        ]
+      }
+    },
+    "telemetry": {
+      "sessions": 125,
+      "triggers": 5,
+      "findings": 17,
+      "suggestions": 19,
+      "findingsList": [
+        "Tempo médio da Fase 2 acima do esperado (+42%)",
+        "Menu_Loja acionado 3,2x por sessão (possível confusão de UX)",
+        "Boss01_Defeat ocorre, em média, após 6 tentativas",
+        "Movimentação intensa (>75% do tempo) — gameplay ativo e engajador"
+      ],
+      "suggestionsList": [
+        "Tempo médio da Fase 2 acima do esperado (+42%)",
+        "Menu_Loja acionado 3,2x por sessão (possível confusão de UX)",
+        "Boss01_Defeat ocorre, em média, após 6 tentativas",
+        "Movimentação intensa (>75% do tempo) — gameplay ativo e engajador"
+      ]
+    },
+    "playerTypes": [
+      {
+        "label": "Casual",
+        "value": 34
+      },
+      {
+        "label": "Hardcore",
+        "value": 22
+      },
+      {
+        "label": "Testador",
+        "value": 18
+      },
+      {
+        "label": "QA",
+        "value": 14
+      },
+      {
+        "label": "Desenvolvedor",
+        "value": 12
+      }
+    ],
+    "archetypes": [
+      {
+        "label": "Conquistador",
+        "value": 30
+      },
+      {
+        "label": "Explorador",
+        "value": 28
+      },
+      {
+        "label": "Socializador",
+        "value": 24
+      },
+      {
+        "label": "Assassino",
+        "value": 18
+      }
+    ],
+    "sessions": [
+      {
+        "id": "sess-1",
+        "date": "2026-01-14T12:00:00",
+        "archetype": "Explorador",
+        "archetypeTone": "emerald",
+        "playerType": "Casual",
+        "durationSeconds": 1664,
+        "aiScore": 7.8,
+        "plugin": true
+      },
+      {
+        "id": "sess-2",
+        "date": "2026-01-14T12:00:00",
+        "archetype": "Explorador",
+        "archetypeTone": "emerald",
+        "playerType": "Casual",
+        "durationSeconds": 1727,
+        "aiScore": 7.9,
+        "plugin": true
+      },
+      {
+        "id": "sess-3",
+        "date": "2026-01-14T12:00:00",
+        "archetype": "Explorador",
+        "archetypeTone": "emerald",
+        "playerType": "Casual",
+        "durationSeconds": 1502,
+        "aiScore": 8.5,
+        "plugin": true
+      },
+      {
+        "id": "sess-4",
+        "date": "2026-01-14T12:00:00",
+        "archetype": "Explorador",
+        "archetypeTone": "emerald",
+        "playerType": "Casual",
+        "durationSeconds": 1509,
+        "aiScore": 9.1,
+        "plugin": true
+      },
+      {
+        "id": "sess-5",
+        "date": "2026-01-14T12:00:00",
+        "archetype": "Conquistador",
+        "archetypeTone": "topaz",
+        "playerType": "Casual",
+        "durationSeconds": 1301,
+        "aiScore": 7.9,
+        "plugin": true
+      }
+    ],
+    "totalSessions": 2554,
+    "insights": [
+      {
+        "id": "ins-1",
+        "title": "Mini mapa",
+        "category": "UX & UI",
+        "categoryTone": "sapphire",
+        "text": "70% dos jogadores não entenderam o mini-mapa, indicando confusão visual ou falta de onboarding."
+      },
+      {
+        "id": "ins-2",
+        "title": "Boss",
+        "category": "Bugs & Acessibilidade",
+        "categoryTone": "ruby",
+        "text": "25% dos jogadores travaram ao sair da Boss Battle, afetando diretamente a progressão."
+      },
+      {
+        "id": "ins-3",
+        "title": "Recompensa",
+        "category": "Diversão",
+        "categoryTone": "emerald",
+        "text": "A recompensa do Explorador foi considerada fraca, reduzindo o incentivo à exploração."
+      },
+      {
+        "id": "ins-4",
+        "title": "Diálogos",
+        "category": "Narrativa & Social",
+        "categoryTone": "amethyst",
+        "text": "Os diálogos foram elogiados por aumentarem a imersão e o vínculo com o mundo do jogo."
+      },
+      {
+        "id": "ins-5",
+        "title": "Ritmo",
+        "category": "Diversão",
+        "categoryTone": "emerald",
+        "text": "O ritmo da fase 2 foi percebido como mais envolvente que o da fase 1, indicando evolução positiva do pacing."
+      },
+      {
+        "id": "ins-6",
+        "title": "Menu",
+        "category": "UX & UI",
+        "categoryTone": "sapphire",
+        "text": "Jogadores demoraram mais que o esperado para acessar o menu principal, indicando problemas de discoverability."
+      },
+      {
+        "id": "ins-7",
+        "title": "Loading",
+        "category": "Bugs & Acessibilidade",
+        "categoryTone": "ruby",
+        "text": "14% relataram glitch no carregamento da Fase 1, com tela congelada ou assets faltando."
+      },
+      {
+        "id": "ins-8",
+        "title": "Climax",
+        "category": "Narrativa & Social",
+        "categoryTone": "amethyst",
+        "text": "Jogadores do perfil Conquistador acharam o final pouco impactante, esperando um clímax maior."
+      },
+      {
+        "id": "ins-9",
+        "title": "Ritmo",
+        "category": "Diversão",
+        "categoryTone": "emerald",
+        "text": "O ritmo da fase 2 foi percebido como mais envolvente que o da fase 1, indicando evolução positiva do pacing."
+      },
+      {
+        "id": "ins-10",
+        "title": "Loading",
+        "category": "Bugs & Acessibilidade",
+        "categoryTone": "ruby",
+        "text": "14% relataram glitch no carregamento da Fase 1, com tela congelada ou assets faltando."
+      },
+      {
+        "id": "ins-11",
+        "title": "Climax",
+        "category": "Narrativa & Social",
+        "categoryTone": "amethyst",
+        "text": "Jogadores do perfil Conquistador acharam o final pouco impactante, esperando um clímax maior."
+      },
+      {
+        "id": "ins-12",
+        "title": "Menu",
+        "category": "UX & UI",
+        "categoryTone": "sapphire",
+        "text": "Jogadores demoraram mais que o esperado para acessar o menu principal, indicando problemas de discoverability."
+      }
+    ]
+  },
+  "sessionDetail": {
+    "id": "88565",
+    "gameId": "game-001",
+    "testName": "Pista Terra v1.3",
+    "testKind": "DEMO ABERTA",
+    "transcript": [
+      {
+        "at": "00:21",
+        "text": "Ok… acho que esse salto era pra ser mais intuitivo. Demorei um pouco pra entender o timing."
+      },
+      {
+        "at": "01:46",
+        "text": "Travou tudo aqui… tive que frear do nada. Achei que o jogo tinha congelado.",
+        "aiNote": "IA: possível micro-travamento ou queda abrupta de FPS."
+      },
+      {
+        "at": "02:12",
+        "text": "Caramba, essa curva é muito boa! Dá uma sensação de velocidade absurda.",
+        "aiNote": "IA: pico de engajamento e resposta emocional positiva."
+      },
+      {
+        "at": "05:15",
+        "text": "Tá difícil demais pra uma corrida inicial. Acho que isso podia ser mais suave no começo.",
+        "aiNote": "IA: curva de dificuldade acima do esperado para jogadores intermediários."
+      },
+      {
+        "at": "05:58",
+        "text": "O som do motor tá legal, mas quando eu bato ele some por um segundo."
+      },
+      {
+        "at": "07:45",
+        "text": "Bati em algo invisível? Não vi nada na pista."
+      },
+      {
+        "at": "09:32",
+        "text": "Já tô meio cansado… talvez a corrida esteja longa demais.",
+        "aiNote": "IA: queda de engajamento por fadiga."
+      },
+      {
+        "at": "10:37",
+        "text": "No geral é bem divertido. Se ajustar essas coisas, fica excelente."
+      }
+    ],
+    "classification": {
+      "archetype": "Explorador",
+      "archetypeTone": "emerald",
+      "playerType": "Casual",
+      "score": 8.9,
+      "funFactor": 7.9,
+      "engagement": 0.87,
+      "insights": 55
+    },
+    "evaluation": {
+      "score": 8.9,
+      "criteria": [
+        {
+          "name": "Clareza do feedback",
+          "score": 9.1,
+          "note": "Comentário direto e atualizado"
+        },
+        {
+          "name": "Dedicação",
+          "score": 8.7,
+          "note": "Jogou até o fim da fase."
+        },
+        {
+          "name": "Profundidade",
+          "score": 8.9,
+          "note": "Identificou bugs visuais"
+        },
+        {
+          "name": "Avaliação",
+          "score": 8.9,
+          "note": "Sugeriu melhoria de ritmo, preencheu todas as perguntas."
+        }
+      ]
+    },
+    "telemetry": {
+      "triggers": 9,
+      "suggestions": 12,
+      "total": 2554,
+      "events": [
+        {
+          "id": "ev-1",
+          "trigger": "BOSS01_Defeat",
+          "at": "08:12",
+          "duration": "1s",
+          "reaction": "Aumento de voz",
+          "insight": "-"
+        },
+        {
+          "id": "ev-2",
+          "trigger": "Menu_Loja",
+          "at": "07:32",
+          "duration": "1s",
+          "reaction": "-",
+          "insight": "3a tentativa sem retenção na loja"
+        },
+        {
+          "id": "ev-3",
+          "trigger": "Menu_Loja",
+          "at": "07:44",
+          "duration": "1s",
+          "reaction": "-",
+          "insight": "-"
+        },
+        {
+          "id": "ev-4",
+          "trigger": "Menu_Loja",
+          "at": "07:49",
+          "duration": "1s",
+          "reaction": "-",
+          "insight": "-"
+        },
+        {
+          "id": "ev-5",
+          "trigger": "BOSS01_Defeat",
+          "at": "08:12",
+          "duration": "1s",
+          "reaction": "Aumento de voz",
+          "insight": "-"
+        }
+      ]
+    },
+    "insights": [
+      {
+        "id": "sd-1",
+        "title": "Gravação - 05:15",
+        "category": "Diversão",
+        "categoryTone": "emerald",
+        "text": "Curva de dificuldade acima do esperado para jogadores intermediários."
+      },
+      {
+        "id": "sd-2",
+        "title": "Boss - 05:15",
+        "category": "Bugs & Acessibilidade",
+        "categoryTone": "ruby",
+        "text": "2 bugs recorrentes semelhantes a outros testers"
+      },
+      {
+        "id": "sd-3",
+        "title": "Recompensa - 05:15",
+        "category": "Diversão",
+        "categoryTone": "emerald",
+        "text": "Engajamento caiu após 35 min (fadiga)"
+      },
+      {
+        "id": "sd-4",
+        "title": "Diálogos - 05:15",
+        "category": "Narrativa & Social",
+        "categoryTone": "amethyst",
+        "text": "Os diálogos foram elogiados por aumentarem a imersão e o vínculo com o mundo do jogo."
+      },
+      {
+        "id": "sd-5",
+        "title": "Ritmo",
+        "category": "Diversão",
+        "categoryTone": "emerald",
+        "text": "O ritmo da fase 2 foi percebido como mais envolvente que o da fase 1, indicando evolução positiva do pacing."
+      },
+      {
+        "id": "sd-6",
+        "title": "Menu",
+        "category": "Orbit Plug-in Insight",
+        "categoryTone": "topaz",
+        "text": "Jogadores demoraram mais que o esperado para acessar o menu principal, indicando problemas de discoverability."
+      },
+      {
+        "id": "sd-7",
+        "title": "Loading - 05:15",
+        "category": "Bugs & Acessibilidade",
+        "categoryTone": "ruby",
+        "text": "14% relataram glitch no carregamento da Fase 1, com tela congelada ou assets faltando."
+      },
+      {
+        "id": "sd-8",
+        "title": "Climax",
+        "category": "Narrativa & Social",
+        "categoryTone": "amethyst",
+        "text": "Jogadores do perfil Conquistador acharam o final pouco impactante, esperando um clímax maior."
+      },
+      {
+        "id": "sd-9",
+        "title": "Menu - 05:15",
+        "category": "UX & UI",
+        "categoryTone": "sapphire",
+        "text": "Jogadores demoraram mais que o esperado para acessar o menu principal, indicando problemas de discoverability."
+      },
+      {
+        "id": "sd-10",
+        "title": "Climax - 05:15",
+        "category": "Narrativa & Social",
+        "categoryTone": "amethyst",
+        "text": "Jogadores do perfil Conquistador acharam o final pouco impactante, esperando um clímax maior."
+      },
+      {
+        "id": "sd-11",
+        "title": "Menu - 05:15",
+        "category": "UX & UI",
+        "categoryTone": "sapphire",
+        "text": "Jogadores demoraram mais que o esperado para acessar o menu principal, indicando problemas de discoverability."
+      },
+      {
+        "id": "sd-12",
+        "title": "Ritmo - 05:15",
+        "category": "Diversão",
+        "categoryTone": "emerald",
+        "text": "O ritmo da fase 2 foi percebido como mais envolvente que o da fase 1, indicando evolução positiva do pacing."
+      }
+    ]
+  },
+  "pluginReport": {
+    "testId": "test-001",
+    "gameId": "game-001",
+    "testName": "Pista Terra v1.3",
+    "testKind": "DEMO ABERTA",
+    "geral": {
+      "sessions": 125,
+      "heatmaps": 3,
+      "activeTriggers": 5,
+      "findings": 17,
+      "suggestions": 19
+    },
+    "heatmap": {
+      "registered": 3,
+      "suggestions": 6,
+      "selected": "Player_Fase_01",
+      "maps": [
+        "Player_Fase_01"
+      ],
+      "imageUrl": "./images/plugin/heatmap-player-fase-01.webp",
+      "findings": [
+        {
+          "id": "hd-1",
+          "title": "Zona de Alta Mortalidade (A Rampa)",
+          "category": "Level Design",
+          "categoryTone": "amber",
+          "text": "A área com \"80% de densidade\" e \"120 mortes\" na rampa é o ponto mais crítico."
+        },
+        {
+          "id": "hd-2",
+          "title": "O \"Caminho Secreto\" Invisível",
+          "category": "Diversão",
+          "categoryTone": "sapphire",
+          "text": "A zona marcada em azul escuro à esquerda indica tráfego quase nulo."
+        },
+        {
+          "id": "hd-3",
+          "title": "Ponto de Atrito A (Entrada)",
+          "category": "Level Design",
+          "categoryTone": "amber",
+          "text": "Há uma alta densidade de jogadores que ficam \"presos\" logo após o primeiro corredor."
+        },
+        {
+          "id": "hd-4",
+          "title": "Setas",
+          "category": "Bugs & Acessibilidade",
+          "categoryTone": "topaz",
+          "text": "As setas indicam que a maioria dos jogadores ignora os cantos retos e \"corta caminho\" pelas bordas das paredes. Isso pode causar clipping (atravessar a parede) ou bugs de colisão."
+        },
+        {
+          "id": "hd-5",
+          "title": "Boss - 05:15",
+          "category": "Bugs & Acessibilidade",
+          "categoryTone": "topaz",
+          "text": "2 bugs recorrentes semelhantes a outros testers"
+        },
+        {
+          "id": "hd-6",
+          "title": "Boss - 05:15",
+          "category": "Bugs & Acessibilidade",
+          "categoryTone": "topaz",
+          "text": "2 bugs recorrentes semelhantes a outros testers"
+        }
+      ],
+      "aiSuggestions": [
+        {
+          "id": "hs-7",
+          "title": "Risco de Clipping",
+          "category": "Bugs & Acessibilidade",
+          "categoryTone": "topaz",
+          "text": "Alta densidade em cantos de paredes. Ação: Revisar colisão e queda de FPS nessas zonas."
+        },
+        {
+          "id": "hs-8",
+          "title": "Rota Invisível",
+          "category": "UX & UI",
+          "categoryTone": "amethyst",
+          "text": "Caminho esquerdo ignorado pelos players. Ação: Adicionar luz ou moedas para atrair o olhar."
+        },
+        {
+          "id": "hs-9",
+          "title": "Gargalo na Rampa",
+          "category": "Level Design",
+          "categoryTone": "amber",
+          "text": "120 mortes registradas. Ação: Facilitar combate ou adicionar checkpoint."
+        }
+      ]
+    },
+    "triggers": {
+      "registered": 9,
+      "suggestions": 12,
+      "selected": "BOSS01_Defeat",
+      "names": [
+        "BOSS01_Defeat"
+      ],
+      "detail": {
+        "name": "BOSS01_Defeat",
+        "type": "Int",
+        "typeTone": "jade",
+        "presence": "100%",
+        "activations": "36 ativações",
+        "averageRate": "18%",
+        "averageTime": "05m42s"
+      },
+      "findings": [
+        {
+          "id": "gd-10",
+          "title": "Conclusão",
+          "category": "Level Design",
+          "categoryTone": "amber",
+          "text": "A taxa de conclusão de apenas 18% indica que o chefe atua como um \"muro\" intransponível para a maioria dos jogadores, gerando alta frustração."
+        },
+        {
+          "id": "gd-11",
+          "title": "Tempo",
+          "category": "Level Design",
+          "categoryTone": "amber",
+          "text": "O tempo médio de 05:42 min até a morte sugere lutas longas e exaustivas. O jogador investe muito tempo para falhar, o que potencializa o sentimento de perda de progresso."
+        }
+      ],
+      "aiSuggestions": [
+        {
+          "id": "gs-12",
+          "title": "Risco de Clipping",
+          "category": "Level Design",
+          "categoryTone": "amber",
+          "text": "Reduzir o HP total do Boss ou simplificar padrões de ataque."
+        }
+      ]
+    },
+    "insights": [
+      {
+        "id": "pi-13",
+        "title": "Taxa de conclusão",
+        "category": "Diversão",
+        "categoryTone": "sapphire",
+        "text": "Uma taxa de conclusão de apenas 18% com um tempo médio de batalha de 05:42 min indica que o combate é exaustivo e excessivamente punitivo.\nSugestão: Reduzir o HP total do Boss em 20% ou simplificar os padrões de ataque na \"Fase 2\", onde a maioria das mortes ocorre. Isso ajudará a validar as fases posteriores do jogo que os testadores não estão alcançando."
+      },
+      {
+        "id": "pi-14",
+        "title": "Boss - 05:15",
+        "category": "Bugs & Acessibilidade",
+        "categoryTone": "topaz",
+        "text": "2 bugs recorrentes semelhantes a outros testers"
+      },
+      {
+        "id": "pi-15",
+        "title": "Recompensa - 05:15",
+        "category": "Diversão",
+        "categoryTone": "sapphire",
+        "text": "Engajamento caiu após 35 min (fadiga)"
+      },
+      {
+        "id": "pi-16",
+        "title": "Diálogos - 05:15",
+        "category": "Narrativa & Social",
+        "categoryTone": "jade",
+        "text": "Os diálogos foram elogiados por aumentarem a imersão e o vínculo com o mundo do jogo."
+      },
+      {
+        "id": "pi-17",
+        "title": "Ritmo",
+        "category": "Diversão",
+        "categoryTone": "sapphire",
+        "text": "O ritmo da fase 2 foi percebido como mais envolvente que o da fase 1, indicando evolução positiva do pacing."
+      },
+      {
+        "id": "pi-18",
+        "title": "Menu",
+        "category": "Orbit Plug-in Insight",
+        "categoryTone": "amber",
+        "text": "Jogadores demoraram mais que o esperado para acessar o menu principal, indicando problemas de discoverability."
+      },
+      {
+        "id": "pi-19",
+        "title": "Loading - 05:15",
+        "category": "Bugs & Acessibilidade",
+        "categoryTone": "topaz",
+        "text": "14% relataram glitch no carregamento da Fase 1, com tela congelada ou assets faltando."
+      },
+      {
+        "id": "pi-20",
+        "title": "Climax",
+        "category": "Narrativa & Social",
+        "categoryTone": "jade",
+        "text": "Jogadores do perfil Conquistador acharam o final pouco impactante, esperando um clímax maior."
+      },
+      {
+        "id": "pi-21",
+        "title": "Menu - 05:15",
+        "category": "UX & UI",
+        "categoryTone": "amethyst",
+        "text": "Jogadores demoraram mais que o esperado para acessar o menu principal, indicando problemas de discoverability."
+      },
+      {
+        "id": "pi-22",
+        "title": "Climax - 05:15",
+        "category": "Narrativa & Social",
+        "categoryTone": "jade",
+        "text": "Jogadores do perfil Conquistador acharam o final pouco impactante, esperando um clímax maior."
+      },
+      {
+        "id": "pi-23",
+        "title": "Menu - 05:15",
+        "category": "UX & UI",
+        "categoryTone": "amethyst",
+        "text": "Jogadores demoraram mais que o esperado para acessar o menu principal, indicando problemas de discoverability."
+      },
+      {
+        "id": "pi-24",
+        "title": "Ritmo - 05:15",
+        "category": "Diversão",
+        "categoryTone": "sapphire",
+        "text": "O ritmo da fase 2 foi percebido como mais envolvente que o da fase 1, indicando evolução positiva do pacing."
+      }
+    ]
+  }
+}
