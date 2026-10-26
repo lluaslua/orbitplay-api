@@ -2,11 +2,13 @@ import { Module } from '@nestjs/common';
 import { PlayerModule } from '../player/player.module';
 import { CommunityAccessGuard } from './community-access.guard';
 import { CommunityController } from './community.controller';
+import { CommunityHub } from './community.hub';
+import { CommunitySocketServer } from './community-socket.server';
 import { CommunityService } from './community.service';
 
 @Module({
   imports: [PlayerModule],
   controllers: [CommunityController],
-  providers: [CommunityService, CommunityAccessGuard],
+  providers: [CommunityService, CommunityAccessGuard, CommunityHub, CommunitySocketServer],
 })
 export class CommunityModule {}

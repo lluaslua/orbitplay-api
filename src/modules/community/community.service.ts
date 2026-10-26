@@ -11,6 +11,7 @@ import type { RequestUser } from '../../common/interfaces/jwt-payload.interface'
 import type { ChatAuthor, ChatMessage, ChatRole, GameCommunity } from '../../contracts';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PlayerService } from '../player/player.service';
+import { CommunityHub } from './community.hub';
 
 /** Quem mandou mensagem nos últimos minutos aparece com o ponto verde. */
 const ONLINE_MS = 10 * 60_000;
@@ -33,6 +34,7 @@ export class CommunityService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly player: PlayerService,
+    private readonly hub: CommunityHub,
   ) {}
 
   /**
@@ -129,7 +131,10 @@ export class CommunityService {
       data: { gameId, channelId, authorId: author.id, text },
       include: { ...autorInclude, reactions: { where: { userId: author.id }, select: { userId: true } } },
     });
-    return toMessage(mensagem, author.id, game.studioId, new Set([author.id]));
+    const enviada = toMessage(mensagem, author.id, game.studioId, new Set([author.id]));
+    // Quem está com a conversa aberta recebe na hora; `own` é acertado pelo app.
+    this.hub.publish({ type: 'message.created', gameId, message: { ...enviada, own: false, reacted: false, online: true } });
+    return enviada;
   }
 
   /** Liga ou desliga a reação de quem pediu — os outros não a veem. */
@@ -163,6 +168,7 @@ export class CommunityService {
       throw new ForbiddenException({ message: 'Você não pode apagar esta mensagem.' });
     }
     await this.prisma.chatMessage.update({ where: { id: messageId }, data: { deletedAt: new Date() } });
+    this.hub.publish({ type: 'message.deleted', gameId, channelId: mensagem.channelId, messageId });
     return { deleted: true };
   }
 
