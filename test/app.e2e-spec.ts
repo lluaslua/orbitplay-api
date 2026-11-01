@@ -711,7 +711,14 @@ describe('OrbitPlay API (e2e)', () => {
 
     it('a avaliação traz as perguntas do estúdio e o envio grava grade e arquivo', async () => {
       const revisao = await api().get(`/api/player/session-review?testId=${testId}`).set('Authorization', `Bearer ${tester}`).expect(200);
-      expect(revisao.body).toMatchObject({ id: participationId, status: 'IN_PROGRESS', testId });
+      expect(revisao.body).toMatchObject({
+        id: participationId,
+        status: 'IN_PROGRESS',
+        testId,
+        requiresRecording: false,
+        requiresMicrophone: false,
+        requiresWebcam: false,
+      });
       expect(revisao.body.questions.find((q: { id: string }) => q.id === 'q-grade').columns).toEqual(['Ruim', 'Ótima']);
 
       const resultado = await api()
