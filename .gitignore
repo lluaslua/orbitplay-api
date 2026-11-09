@@ -1,6 +1,6 @@
 node_modules
 dist
-# Builds, gravações e imagens enviadas
+# Builds, gravações e imagens enviadas (só a pasta na raiz, não src/common/storage)
 /storage/
 coverage
 *.log
