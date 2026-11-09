@@ -13,7 +13,11 @@ import { AuthService } from './auth.service';
     JwtModule.registerAsync({
       global: true,
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({ secret: config.getOrThrow<string>('jwt.secret') }),
+      useFactory: (config: ConfigService) => ({
+        secret: config.getOrThrow<string>('jwt.secret'),
+        signOptions: { algorithm: 'HS256' as const },
+        verifyOptions: { algorithms: ['HS256' as const] },
+      }),
     }),
   ],
   controllers: [AuthController],

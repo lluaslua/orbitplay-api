@@ -23,6 +23,12 @@ import {
   DEFAULT_XP_RULES,
 } from '../src/common/settings/settings.defaults';
 
+// O seed apaga o banco e cria contas com senha conhecida (123456) e um código de plug-in público
+// (`opk_demo_...`): em produção isso é uma porta aberta, então ele se recusa a rodar.
+if (process.env.NODE_ENV === 'production' && process.env.ALLOW_SEED_IN_PRODUCTION !== 'true') {
+  throw new Error('O seed apaga o banco e cria contas de demonstração: não roda com NODE_ENV=production.');
+}
+
 const prisma = new PrismaClient();
 
 function load<T>(arquivo: string): T {

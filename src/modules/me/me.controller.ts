@@ -2,6 +2,7 @@ import { BadRequestException, Body, Controller, HttpCode, HttpStatus, Patch, Pos
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { RequestUser } from '../../common/interfaces/jwt-payload.interface';
+import { RateLimit } from '../../common/security/rate-limit.guard';
 import { IMAGE_MAX_BYTES, imageFilter } from '../../common/storage/upload-filters';
 import type { AuthSession, AuthUser } from '../../contracts';
 import { ChangePasswordDto, UpdateMeDto } from './me.dto';
@@ -18,6 +19,7 @@ export class MeController {
   }
 
   /** Multipart com a foto no campo `file`. */
+  @RateLimit({ limit: 10, windowMs: 3_600_000, by: 'user' })
   @Post('avatar')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: IMAGE_MAX_BYTES }, fileFilter: imageFilter }))
@@ -26,6 +28,7 @@ export class MeController {
     return this.me.uploadAvatar(user, file);
   }
 
+  @RateLimit({ limit: 5, windowMs: 900_000, by: 'user' })
   @Post('password')
   @HttpCode(HttpStatus.OK)
   changePassword(@CurrentUser() user: RequestUser, @Body() dto: ChangePasswordDto): Promise<AuthSession> {

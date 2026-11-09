@@ -1,4 +1,5 @@
 import { Type } from 'class-transformer';
+import { IsStrongPassword } from '../../../common/security/password-policy';
 import {
   ArrayMaxSize,
   IsArray,
@@ -45,6 +46,7 @@ export class UpdateAccessUserDto implements AccessUserPatch {
  */
 export class SetAccessPasswordDto {
   @IsString()
+  @IsStrongPassword()
   @MinLength(8, { message: 'A senha precisa de pelo menos 8 caracteres.' })
   @MaxLength(72)
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])[\x20-\x7E]+$/, {

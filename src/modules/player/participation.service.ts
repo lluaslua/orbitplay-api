@@ -5,6 +5,7 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { Prisma, type TestQuestion } from '@prisma/client';
 import { ELITE_TIER, TEXT_QUESTION_TYPES } from '../../common/constants/domain.constants';
@@ -139,6 +140,7 @@ export class ParticipationService {
     }
 
     const teste = participacao.playtest;
+    await this.assertPlausibleSubmission(participacao.id, participacao.startedAt, dto);
     const respostas = await this.storeFiles(participacao.id, teste.questions, requiredAnswers(teste.questions, dto.answers));
     // Só resposta escrita conta como texto na nota; data, hora, link de arquivo e escolhas contam como preenchidas.
     const paraNota = Object.fromEntries(
@@ -328,6 +330,31 @@ export class ParticipationService {
   }
 
   /**
+   * O cliente do tester informa duração, bugs e respostas — nada disso é confiável.
+   * A API só aceita o que cabe no tempo da participação, no que foi registrado
+   * em eventos e em tamanhos razoáveis (bônus de bug e XP dependem desses números).
+   */
+  private async assertPlausibleSubmission(participationId: string, startedAt: Date, dto: SubmitSessionDto): Promise<void> {
+    const decorridos = Math.floor((Date.now() - startedAt.getTime()) / 1000);
+    if (dto.durationSeconds > decorridos + 120) {
+      throw new UnprocessableEntityException({ message: 'A duração informada passa do tempo da sessão.', code: ErrorCode.TELEMETRY_REJECTED });
+    }
+    if (dto.bugsReported > 0) {
+      const registrados = await this.prisma.sessionEvent.count({ where: { participationId, type: 'BUG' } });
+      if (dto.bugsReported > registrados) {
+        throw new UnprocessableEntityException({ message: 'Há mais bugs informados do que registrados na sessão.', code: ErrorCode.TELEMETRY_REJECTED });
+      }
+    }
+    for (const valor of Object.values(dto.answers)) {
+      const texto = typeof valor === 'string' ? valor : Array.isArray(valor) ? valor.join('') : '';
+      const imagem = typeof valor === 'string' && valor.startsWith('data:image/');
+      if (texto.length > (imagem ? 7_500_000 : 10_000)) {
+        throw new BadRequestException({ message: 'Uma das respostas é grande demais.', code: ErrorCode.VALIDATION_ERROR });
+      }
+    }
+  }
+
+  /**
    * "Envio de arquivo": o app manda a imagem em data URL; ela vira arquivo em
    * `public/respostas/<participação>/` e a resposta guarda a URL.
    */
@@ -340,7 +367,8 @@ export class ParticipationService {
     for (const pergunta of perguntas) {
       const valor = gravadas[pergunta.id];
       if (pergunta.type !== 'FILE_UPLOAD' || typeof valor !== 'string' || !valor.startsWith('data:')) continue;
-      const key = await this.storage.storeDataUrl(valor, `respostas/${participationId}/${pergunta.id}-${Date.now()}`, 'public');
+      // O sufixo aleatório (em `storeDataUrl`) faz da URL um endereço impossível de adivinhar.
+      const key = await this.storage.storeDataUrl(valor, `respostas/${participationId}/${pergunta.id}`, 'public');
       gravadas[pergunta.id] = this.storage.publicUrl(key);
     }
     return gravadas;

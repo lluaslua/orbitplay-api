@@ -164,12 +164,19 @@ export class PaymentsService {
     provider: string,
     headers: Record<string, string | string[] | undefined>,
     body: unknown,
+    rawBody?: Buffer,
   ): Promise<{ received: true }> {
     if (provider !== this.gateway.name) throw new NotFoundException({ message: 'Provedor desconhecido.' });
 
-    const evento = await this.gateway.parseWebhook(headers, body);
+    const evento = await this.gateway.parseWebhook(headers, body, rawBody);
     const pedido = await this.prisma.order.findFirst({ where: { providerRef: evento.providerRef } });
     if (!pedido) throw new NotFoundException({ message: 'Pedido não encontrado.' });
+    // Só pedido em aberto muda: evento repetido ou fora de ordem não reabre nem desfaz pagamento.
+    if (pedido.status !== 'PENDING') return { received: true };
+    // O valor confirmado pelo provedor tem de ser o do pedido (o do servidor, nunca o do cliente).
+    if (evento.status === 'PAID' && evento.amountCents !== undefined && evento.amountCents !== pedido.amountCents) {
+      throw new UnprocessableEntityException({ message: 'Valor do webhook diverge do pedido.', code: ErrorCode.INVALID_WEBHOOK });
+    }
 
     await this.applyResult(pedido.id, {
       ...evento,

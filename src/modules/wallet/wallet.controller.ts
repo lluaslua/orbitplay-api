@@ -3,6 +3,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Idempotent } from '../../common/idempotency/idempotent.decorator';
 import type { RequestUser } from '../../common/interfaces/jwt-payload.interface';
+import { RateLimit } from '../../common/security/rate-limit.guard';
 import type { Wallet, WithdrawalInfo } from '../../contracts';
 import { WithdrawalDto } from './dto/withdrawal.dto';
 import { WalletService } from './wallet.service';
@@ -17,6 +18,7 @@ export class WalletController {
     return this.wallet.getWallet(user);
   }
 
+  @RateLimit({ limit: 5, windowMs: 3_600_000, by: 'user' })
   @Idempotent()
   @Post('withdrawals')
   withdraw(@CurrentUser() user: RequestUser, @Body() dto: WithdrawalDto): Promise<WithdrawalInfo> {

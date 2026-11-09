@@ -1,4 +1,5 @@
-import { IsIn, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsIn, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsStrongPassword } from '../../common/security/password-policy';
 import { UI_LOCALES } from '../../common/constants/domain.constants';
 import type { ChangePasswordPayload, UpdateMePayload } from '../../contracts';
 
@@ -17,11 +18,11 @@ export class UpdateMeDto implements UpdateMePayload {
 
 export class ChangePasswordDto implements ChangePasswordPayload {
   @IsString()
+  @MaxLength(200)
   currentPassword: string;
 
   /** A mesma regra do cadastro. */
   @IsString()
-  @MinLength(8, { message: 'A senha precisa de pelo menos 8 caracteres.' })
-  @MaxLength(72)
+  @IsStrongPassword()
   newPassword: string;
 }

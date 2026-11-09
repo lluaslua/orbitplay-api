@@ -6,13 +6,13 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
 import type { Prisma } from '@prisma/client';
 import { GameAccessService } from '../../common/access/game-access.service';
 import { studioIdOf } from '../../common/access/studio-scope';
 import { ErrorCode } from '../../common/constants/error-codes';
 import type { RequestUser } from '../../common/interfaces/jwt-payload.interface';
 import { pageArgs } from '../../common/pagination/pagination';
+import { TokenService } from '../../common/security/token.service';
 import { StorageService } from '../../common/storage/storage.service';
 import { formatBRL } from '../../common/utils/money';
 import type { RetestInviteInfo, Session } from '../../contracts';
@@ -35,7 +35,7 @@ export class SessionsService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly jwt: JwtService,
+    private readonly tokens: TokenService,
     private readonly storage: StorageService,
     private readonly access: GameAccessService,
     private readonly achievements: AchievementsService,
@@ -67,7 +67,7 @@ export class SessionsService {
   /** Caminho do vídeo, conferindo o link temporário. */
   async videoPath(sessionId: string, token: string | undefined): Promise<string> {
     try {
-      const { sub, purpose } = await this.jwt.verifyAsync<{ sub: string; purpose: string }>(token ?? '');
+      const { sub, purpose } = await this.tokens.verify<{ sub: string; purpose: string }>('video', token ?? '');
       if (purpose !== FINALIDADE_VIDEO || sub !== sessionId) throw new Error('finalidade');
     } catch {
       throw new UnauthorizedException({ message: 'Link do vídeo inválido ou expirado.' });
@@ -268,7 +268,7 @@ export class SessionsService {
   /** O `<video>` do app não manda o token, então a URL leva um link que vale uma hora. */
   private async withVideo(row: SessionRow): Promise<Session> {
     if (!row.participation.videoKey) return toSession(row, null);
-    const token = await this.jwt.signAsync({ sub: row.id, purpose: FINALIDADE_VIDEO }, { expiresIn: VIDEO_TTL_SEGUNDOS });
+    const token = await this.tokens.sign('video', { sub: row.id, purpose: FINALIDADE_VIDEO }, VIDEO_TTL_SEGUNDOS);
     return toSession(row, `${this.publicApiUrl}/sessions/${row.id}/video?token=${token}`);
   }
 }

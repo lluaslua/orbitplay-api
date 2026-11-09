@@ -1,4 +1,4 @@
-import { IsBoolean, IsEmail, IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsEmail, IsIn, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import { LOGIN_TABS } from '../../../common/constants/domain.constants';
 import type { LoginCredentials, LoginTab } from '../../../contracts';
 
@@ -8,6 +8,7 @@ export class LoginDto implements LoginCredentials {
 
   @IsString()
   @IsNotEmpty({ message: 'Informe a senha.' })
+  @MaxLength(200)
   password: string;
 
   /** Aba escolhida na tela de login ("Sou um estúdio" / "Sou um tester"). */

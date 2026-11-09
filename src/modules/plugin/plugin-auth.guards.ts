@@ -4,10 +4,10 @@ import {
   type CanActivate,
   type ExecutionContext,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import type { Request } from 'express';
 import { createHash } from 'node:crypto';
 import { ErrorCode } from '../../common/constants/error-codes';
+import { TokenService } from '../../common/security/token.service';
 import { PrismaService } from '../../prisma/prisma.service';
 
 /** Finalidade gravada no token de telemetria — outro JWT da API não passa por aqui. */
@@ -40,11 +40,14 @@ export class PluginKeyGuard implements CanActivate {
 
     const chave = await this.prisma.pluginKey.findUnique({
       where: { codeHash: hashPluginCode(code) },
-      select: { id: true, gameId: true, revokedAt: true },
+      select: { id: true, gameId: true, revokedAt: true, lastUsedAt: true },
     });
     if (!chave || chave.revokedAt) throw invalido();
 
-    await this.prisma.pluginKey.update({ where: { id: chave.id }, data: { lastUsedAt: new Date() } });
+    // Marca o uso no máximo uma vez por minuto: o jogo manda telemetria o tempo todo.
+    if (!chave.lastUsedAt || Date.now() - chave.lastUsedAt.getTime() > 60_000) {
+      await this.prisma.pluginKey.update({ where: { id: chave.id }, data: { lastUsedAt: new Date() } });
+    }
     request.pluginKey = { id: chave.id, gameId: chave.gameId };
     return true;
   }
@@ -57,7 +60,7 @@ export class PluginKeyGuard implements CanActivate {
 @Injectable()
 export class TelemetryTokenGuard implements CanActivate {
   constructor(
-    private readonly jwt: JwtService,
+    private readonly tokens: TokenService,
     private readonly prisma: PrismaService,
   ) {}
 
@@ -68,7 +71,7 @@ export class TelemetryTokenGuard implements CanActivate {
 
     let payload: { sub: string; pid: string; purpose: string };
     try {
-      payload = await this.jwt.verifyAsync(token);
+      payload = await this.tokens.verify<{ sub: string; pid: string; purpose: string }>('telemetry', token);
     } catch {
       throw tokenInvalido();
     }
