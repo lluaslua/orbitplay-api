@@ -4,6 +4,7 @@ import { Public } from '../../common/decorators/public.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RequireStudioPermission } from '../../common/decorators/studio-permission.decorator';
 import type { RequestUser } from '../../common/interfaces/jwt-payload.interface';
+import { RateLimit } from '../../common/security/rate-limit.guard';
 import type {
   CreatedPluginKey,
   PluginConfig,
@@ -27,6 +28,7 @@ export class PluginController {
 
   /** "Baixar plug-in", "Ver documentação" e "Abrir site". */
   @Public()
+  @RateLimit({ limit: 60, windowMs: 60_000 })
   @Get('info')
   info(): Promise<PluginInfo> {
     return this.plugin.info();
@@ -34,6 +36,7 @@ export class PluginController {
 
   /** "Validar código de acesso" (Figma `423:2774`). */
   @Public()
+  @RateLimit({ limit: 30, windowMs: 60_000 })
   @UseGuards(PluginKeyGuard)
   @Post('validate')
   @HttpCode(HttpStatus.OK)
@@ -43,6 +46,7 @@ export class PluginController {
 
   /** O Inspector (`423:3000`) salva mapas e gatilhos do projeto. */
   @Public()
+  @RateLimit({ limit: 30, windowMs: 60_000 })
   @UseGuards(PluginKeyGuard)
   @Put('config')
   saveConfig(@Req() request: PluginRequest, @Body() dto: PluginConfigDto): Promise<PluginConfig> {
@@ -51,6 +55,7 @@ export class PluginController {
 
   /** Em lote, até 500 por chamada: o jogo acumula e manda de tempos em tempos. */
   @Public()
+  @RateLimit({ limit: 120, windowMs: 60_000 })
   @UseGuards(TelemetryTokenGuard)
   @Post('telemetry')
   telemetry(@Req() request: TelemetryRequest, @Body() dto: TelemetryBatchDto): Promise<{ received: number }> {
@@ -70,6 +75,7 @@ export class GamePluginController {
   }
 
   @RequireStudioPermission('EDIT')
+  @RateLimit({ limit: 10, windowMs: 3_600_000, by: 'user' })
   @Post('keys')
   createKey(@CurrentUser() user: RequestUser, @Param('gameId') gameId: string, @Body() dto: CreatePluginKeyDto): Promise<CreatedPluginKey> {
     return this.plugin.createKey(user, gameId, dto);

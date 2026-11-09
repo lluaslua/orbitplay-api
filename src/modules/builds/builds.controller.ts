@@ -14,6 +14,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RequireStudioPermission } from '../../common/decorators/studio-permission.decorator';
 import type { RequestUser } from '../../common/interfaces/jwt-payload.interface';
+import { RateLimit } from '../../common/security/rate-limit.guard';
 import { buildFilter } from '../../common/storage/upload-filters';
 import type { BuildInfo } from '../../contracts';
 import { BuildsService } from './builds.service';
@@ -33,6 +34,7 @@ export class BuildsController {
 
   /** Multipart: o arquivo no campo `file` e a versão no campo `version`. */
   @RequireStudioPermission('EDIT')
+  @RateLimit({ limit: 20, windowMs: 3_600_000, by: 'user' })
   @Post()
   @UseInterceptors(FileInterceptor('file', { fileFilter: buildFilter }))
   upload(

@@ -5,8 +5,8 @@ import {
   type ExecutionContext,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../prisma/prisma.service';
+import { TokenService } from '../security/token.service';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import type { AuthenticatedRequest, JwtPayload } from '../interfaces/jwt-payload.interface';
 
@@ -21,7 +21,7 @@ import type { AuthenticatedRequest, JwtPayload } from '../interfaces/jwt-payload
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(
-    private readonly jwt: JwtService,
+    private readonly tokens: TokenService,
     private readonly reflector: Reflector,
     private readonly prisma: PrismaService,
   ) {}
@@ -39,10 +39,13 @@ export class JwtAuthGuard implements CanActivate {
 
     let payload: JwtPayload;
     try {
-      payload = await this.jwt.verifyAsync<JwtPayload>(token);
+      payload = await this.tokens.verify<JwtPayload>('access', token);
     } catch {
       throw sessaoExpirada();
     }
+
+    // Logout: o token encerrado não volta, mesmo antes de vencer.
+    if (payload.jti && (await this.prisma.revokedToken.findUnique({ where: { jti: payload.jti } }))) throw sessaoExpirada();
 
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },

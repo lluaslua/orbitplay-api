@@ -3,6 +3,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Idempotent } from '../../common/idempotency/idempotent.decorator';
 import type { RequestUser } from '../../common/interfaces/jwt-payload.interface';
+import { RateLimit } from '../../common/security/rate-limit.guard';
 import { CLIENT_PLATFORM_HEADER, clientPlatform } from '../../common/utils/platform';
 import type {
   Achievement,
@@ -102,6 +103,7 @@ export class PlayerController {
     return this.player.getSessionOutcome(user.id, testId);
   }
 
+  @RateLimit({ limit: 20, windowMs: 60_000, by: 'user' })
   @Post('tests/:testId/start')
   start(
     @CurrentUser() user: RequestUser,
@@ -111,6 +113,7 @@ export class PlayerController {
     return this.participations.start(user, testId, clientPlatform(platform));
   }
 
+  @RateLimit({ limit: 10, windowMs: 60_000, by: 'user' })
   @Idempotent()
   @Post('tests/:testId/submit')
   submit(

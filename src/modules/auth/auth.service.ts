@@ -7,16 +7,18 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
 import type { UserRole } from '@prisma/client';
 import { createHash, randomBytes } from 'node:crypto';
+import { RateLimitStore, tooManyRequests } from '../../common/security/rate-limit.guard';
+import { SecurityLogService } from '../../common/security/security-log.service';
+import { TokenService } from '../../common/security/token.service';
 import { RESET_TOKEN_TTL_MINUTES } from '../../common/constants/domain.constants';
 import { ErrorCode } from '../../common/constants/error-codes';
 import type { JwtPayload, RequestUser } from '../../common/interfaces/jwt-payload.interface';
 import { MailService } from '../../common/mail/mail.service';
 import type { AuthSession, AuthUser } from '../../contracts';
 import { PrismaService } from '../../prisma/prisma.service';
-import { hashPassword, verifyPassword } from '../users/password';
+import { hashPassword, needsRehash, verifyPassword } from '../users/password';
 import { normalizeEmail, UsersService } from '../users/users.service';
 import type { LoginDto } from './dto/login.dto';
 import type { RecoverPasswordDto } from './dto/recover-password.dto';
@@ -28,9 +30,11 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly users: UsersService,
-    private readonly jwt: JwtService,
+    private readonly tokens: TokenService,
     private readonly config: ConfigService,
     private readonly mail: MailService,
+    private readonly limits: RateLimitStore,
+    private readonly log: SecurityLogService,
   ) {}
 
   /**
@@ -38,10 +42,25 @@ export class AuthService {
    * RN-02). A aba escolhida não dá papel a ninguém: a sessão sai com o papel
    * da conta, e estúdio/jogador na aba errada é recusado (RN-03).
    */
-  async login({ email, password, role, remember }: LoginDto): Promise<AuthSession> {
+  async login({ email, password, role, remember }: LoginDto, ip = 'desconhecido'): Promise<AuthSession> {
+    const maxFalhas = this.config.getOrThrow<number>('security.loginMaxFailures');
+    const bloqueioMin = this.config.getOrThrow<number>('security.loginLockMinutes');
+    const emailRef = SecurityLogService.emailRef(email);
+    // O contador em memória vale também para e-mail inexistente: bloqueada ou não, a resposta é a mesma.
+    const chave = `login:${emailRef}`;
     const user = await this.users.findByEmail(email);
+
+    const travado = this.limits.isBlocked(chave, maxFalhas);
+    if ((user?.lockedUntil && user.lockedUntil > new Date()) || travado.blocked) {
+      this.log.event('login_blocked', { email: emailRef, ip });
+      throw tooManyRequests(travado.retryAfter || bloqueioMin * 60);
+    }
+
     const senhaConfere = await verifyPassword(password, user?.passwordHash);
     if (!user || !senhaConfere) {
+      this.limits.hit(chave, maxFalhas, bloqueioMin * 60_000);
+      if (user) await this.registerFailure(user.id, user.failedLoginCount, maxFalhas, bloqueioMin);
+      this.log.event('login_failed', { email: emailRef, ip });
       throw new UnauthorizedException({
         message: 'E-mail ou senha inválidos.',
         code: ErrorCode.INVALID_CREDENTIALS,
@@ -66,9 +85,47 @@ export class AuthService {
       });
     }
 
-    // "Último acesso" da tabela de Gerenciamento de acessos.
-    await this.prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
+    this.limits.clear(chave);
+    // "Último acesso" da tabela de Gerenciamento de acessos; acerto zera as falhas e, se o hash é antigo, refaz.
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        lastLoginAt: new Date(),
+        failedLoginCount: 0,
+        lockedUntil: null,
+        ...(needsRehash(user.passwordHash) ? { passwordHash: await hashPassword(password) } : {}),
+      },
+    });
     return this.issueSession(user.id, user.role, remember ?? false);
+  }
+
+  private async registerFailure(userId: string, atuais: number, maxFalhas: number, bloqueioMin: number): Promise<void> {
+    const total = atuais + 1;
+    const trava = total >= maxFalhas;
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        failedLoginCount: trava ? 0 : total,
+        lockedUntil: trava ? new Date(Date.now() + bloqueioMin * 60_000) : undefined,
+      },
+    });
+  }
+
+  /** Encerra o token apresentado. Sem token (ou inválido) não há o que revogar — e não é erro. */
+  async logout(bearer: string | undefined): Promise<void> {
+    const [tipo, token] = bearer?.split(' ') ?? [];
+    if (tipo?.toLowerCase() !== 'bearer' || !token) return;
+    try {
+      const { jti, exp } = await this.tokens.verify<JwtPayload>('access', token);
+      if (!jti || !exp) return;
+      await this.prisma.revokedToken.upsert({
+        where: { jti },
+        create: { jti, expiresAt: new Date(exp * 1000) },
+        update: {},
+      });
+    } catch {
+      // token vencido ou inválido: nada a revogar.
+    }
   }
 
   async me(user: RequestUser): Promise<AuthUser> {
@@ -135,7 +192,12 @@ export class AuthService {
    */
   async recover({ email }: RecoverPasswordDto): Promise<{ message: string }> {
     const user = await this.users.findByEmail(email);
-    if (user && user.status !== 'INACTIVE') await this.sendPasswordLink(user.id, user.email, 'Redefinição de senha');
+    if (user && user.status !== 'INACTIVE') {
+      // Em segundo plano: a resposta leva o mesmo tempo com ou sem conta.
+      void this.sendPasswordLink(user.id, user.email, 'Redefinição de senha').catch(() =>
+        this.log.event('recover_mail_failed', { email: SecurityLogService.emailRef(email) }),
+      );
+    }
 
     return {
       message: `Se existir uma conta para ${email}, enviaremos as instruções de recuperação.`,
@@ -161,7 +223,7 @@ export class AuthService {
       this.prisma.user.update({
         where: { id: registro.userId },
         // Tokens emitidos antes da troca deixam de valer.
-        data: { passwordHash, status: 'ACTIVE', sessionsValidAfter: agora },
+        data: { passwordHash, status: 'ACTIVE', sessionsValidAfter: agora, failedLoginCount: 0, lockedUntil: null },
       }),
       this.prisma.passwordResetToken.updateMany({
         where: { userId: registro.userId, usedAt: null },
@@ -169,19 +231,24 @@ export class AuthService {
       }),
     ]);
 
+    this.log.event('password_reset', { userId: registro.userId });
     return { message: 'Senha redefinida. Entre com a nova senha.' };
   }
 
   /** Gera o link de uso único e manda por e-mail. Usado também pelo convite da Central. */
   async sendPasswordLink(userId: string, email: string, assunto: string): Promise<void> {
     const token = randomBytes(32).toString('base64url');
-    await this.prisma.passwordResetToken.create({
-      data: {
-        userId,
-        tokenHash: hashToken(token),
-        expiresAt: new Date(Date.now() + RESET_TOKEN_TTL_MINUTES * 60_000),
-      },
-    });
+    // Um link só vale por vez: o pedido novo cancela os anteriores ainda abertos.
+    await this.prisma.$transaction([
+      this.prisma.passwordResetToken.updateMany({ where: { userId, usedAt: null }, data: { usedAt: new Date() } }),
+      this.prisma.passwordResetToken.create({
+        data: {
+          userId,
+          tokenHash: hashToken(token),
+          expiresAt: new Date(Date.now() + RESET_TOKEN_TTL_MINUTES * 60_000),
+        },
+      }),
+    ]);
 
     // O app usa HashRouter, então a rota vai depois do `#`.
     const link = `${this.config.getOrThrow<string>('app.url')}/#/reset-password?token=${token}`;
@@ -200,7 +267,7 @@ export class AuthService {
     );
     const payload: JwtPayload = { sub: userId, role };
     const [token, user] = await Promise.all([
-      this.jwt.signAsync(payload, { expiresIn: segundos }),
+      this.tokens.sign('access', payload as unknown as Record<string, unknown>, segundos),
       this.users.toAuthUser(userId),
     ]);
     if (!user) throw new NotFoundException({ message: 'Usuário não encontrado.' });

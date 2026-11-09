@@ -26,6 +26,19 @@ export class ApiExceptionFilter implements ExceptionFilter {
       return;
     }
 
+    // Erros do body-parser (JSON inválido, corpo grande) vêm com `status` e não são HttpException.
+    const status = (exception as { status?: number; type?: string } | null)?.status;
+    const tipo = (exception as { type?: string } | null)?.type;
+    if (typeof status === 'number' && status >= 400 && status < 500 && typeof tipo === 'string') {
+      const body: ApiError =
+        status === 413
+          ? { message: 'O conteúdo enviado é grande demais.', code: 'PAYLOAD_TOO_LARGE' }
+          : { message: 'Requisição inválida.' };
+      response.status(status).json(body);
+      return;
+    }
+
+    // Só o servidor vê o detalhe; o cliente recebe a mensagem genérica.
     this.logger.error(exception);
     const body: ApiError = { message: 'Não foi possível concluir a operação.' };
     response.status(HttpStatus.INTERNAL_SERVER_ERROR).json(body);

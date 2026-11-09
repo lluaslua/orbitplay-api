@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post } from '@ne
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import type { RequestUser } from '../../common/interfaces/jwt-payload.interface';
+import { RateLimit } from '../../common/security/rate-limit.guard';
 import type { AccessGroup, AccessOverview, AccessUser } from '../../contracts';
 import {
   AccessGroupDto,
@@ -36,6 +37,7 @@ export class StudioAccessController {
     return this.acessos.updateUser(user, id, dto);
   }
 
+  @RateLimit({ limit: 10, windowMs: 900_000, by: 'user' })
   @HttpCode(200)
   @Post('users/:id/password')
   setPassword(@CurrentUser() user: RequestUser, @Param('id') id: string, @Body() dto: SetAccessPasswordDto): Promise<{ message: string }> {

@@ -1,5 +1,4 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { Prisma, type GamePluginConfig, type PluginKey } from '@prisma/client';
 import { randomBytes } from 'node:crypto';
 import { GameAccessService } from '../../common/access/game-access.service';
@@ -17,6 +16,8 @@ import type {
   PluginValidation,
   TelemetryToken,
 } from '../../contracts';
+import { assertPlausibleEvents } from '../../common/security/telemetry-limits';
+import { TokenService } from '../../common/security/token.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { CreatePluginKeyDto, PluginConfigDto, TelemetryEventDto } from './dto/plugin.dto';
 import { hashPluginCode, TELEMETRY_PURPOSE } from './plugin-auth.guards';
@@ -40,7 +41,7 @@ export class PluginService {
     private readonly prisma: PrismaService,
     private readonly access: GameAccessService,
     private readonly settings: SettingsService,
-    private readonly jwt: JwtService,
+    private readonly tokens: TokenService,
   ) {}
 
   info(): Promise<PluginInfo> {
@@ -122,9 +123,10 @@ export class PluginService {
     });
     if (!participacao) throw new NotFoundException({ message: 'Participação em andamento não encontrada.' });
 
-    const token = await this.jwt.signAsync(
+    const token = await this.tokens.sign(
+      'telemetry',
       { sub: participacao.id, pid: user.id, purpose: TELEMETRY_PURPOSE },
-      { expiresIn: TELEMETRY_TTL_SEGUNDOS },
+      TELEMETRY_TTL_SEGUNDOS,
     );
     return {
       token,
@@ -135,6 +137,11 @@ export class PluginService {
 
   /** Eventos do jogo viram `SessionEvent`, como os que o app manda — o relatório lê os dois igual. */
   async ingest(participationId: string, eventos: TelemetryEventDto[]): Promise<{ received: number }> {
+    const participacao = await this.prisma.participation.findUniqueOrThrow({
+      where: { id: participationId },
+      select: { startedAt: true, _count: { select: { events: true } } },
+    });
+    assertPlausibleEvents(eventos, participacao.startedAt, participacao._count.events);
     const { count } = await this.prisma.sessionEvent.createMany({
       data: eventos.map((evento) => ({
         participationId,

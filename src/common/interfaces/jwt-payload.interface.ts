@@ -7,6 +7,8 @@ export interface JwtPayload {
   role: UserRole;
   iat?: number;
   exp?: number;
+  /** Id do token — é o que o logout revoga. */
+  jti?: string;
 }
 
 /**

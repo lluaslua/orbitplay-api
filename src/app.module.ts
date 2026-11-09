@@ -8,6 +8,8 @@ import { StudioPermissionGuard } from './common/guards/studio-permission.guard';
 import { IdempotencyInterceptor } from './common/idempotency/idempotency.interceptor';
 import { MailModule } from './common/mail/mail.module';
 import { SettingsModule } from './common/settings/settings.service';
+import { IpRateLimitGuard, UserRateLimitGuard } from './common/security/rate-limit.guard';
+import { SecurityModule } from './common/security/security.module';
 import { StorageModule } from './common/storage/storage.module';
 import configuration from './config/configuration';
 import { AdminModule } from './modules/admin/admin.module';
@@ -37,6 +39,7 @@ import { PrismaModule } from './prisma/prisma.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true, load: [configuration] }),
     PrismaModule,
+    SecurityModule,
     StorageModule,
     MailModule,
     AuditModule,
@@ -69,9 +72,12 @@ import { PrismaModule } from './prisma/prisma.module';
     PublicModule,
   ],
   providers: [
-    // Toda rota exige token, salvo as @Public(). A ordem importa: os dois
-    // seguintes leem o usuário que o JwtAuthGuard carrega do banco.
+    // A ordem importa. Primeiro o limite por IP (barra a inundação antes de gastar banco);
+    // toda rota exige token, salvo as @Public(); os guards seguintes leem o usuário que o
+    // JwtAuthGuard carrega do banco, e o limite por conta também.
+    { provide: APP_GUARD, useClass: IpRateLimitGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: UserRateLimitGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
     { provide: APP_GUARD, useClass: StudioPermissionGuard },
     { provide: APP_INTERCEPTOR, useClass: IdempotencyInterceptor },

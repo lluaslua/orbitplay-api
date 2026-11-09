@@ -4,6 +4,7 @@ import { studioIdOf } from '../../common/access/studio-scope';
 import { ErrorCode } from '../../common/constants/error-codes';
 import type { RequestUser } from '../../common/interfaces/jwt-payload.interface';
 import type { AccessGroup, AccessOverview, AccessPermissions, AccessUser, UserStatus } from '../../contracts';
+import { GameAccessService } from '../../common/access/game-access.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { hashPassword, UNUSABLE_PASSWORD_HASH } from '../users/password';
@@ -48,6 +49,7 @@ export class StudioAccessService {
     private readonly prisma: PrismaService,
     private readonly team: TeamService,
     private readonly audit: AuditService,
+    private readonly gameAccess: GameAccessService,
   ) {}
 
   async overview(user: RequestUser): Promise<AccessOverview> {
@@ -142,6 +144,7 @@ export class StudioAccessService {
     if (alvo.studioPermission === 'MANAGE' && alvo.id !== user.id && user.studioPermission !== 'MANAGE') {
       throw adminProtegido('Só o administrador troca a senha de outro administrador.');
     }
+    await this.assertNoEscalation(user, alvo);
 
     const agora = new Date();
     const passwordHash = await hashPassword(dto.password);
@@ -206,6 +209,33 @@ export class StudioAccessService {
     const conta = await this.prisma.user.findUnique({ where: { id: user.id }, select: { teamPermissions: true } });
     if (!conta?.teamPermissions.includes(poder)) {
       throw semPoder(poder === 'DELETE_USERS' ? 'Você não tem permissão para excluir usuários.' : 'Você não tem permissão para criar ou editar usuários.');
+    }
+  }
+
+  /**
+   * Trocar a senha de alguém é, na prática, virar essa pessoa. Quem não é o ADM
+   * só pode fazer isso com contas que não têm NENHUM poder a mais que o seu:
+   * nem no estúdio, nem nas colunas de equipe, nem em nenhum jogo. Senão
+   * "Criar/Editar usuário" viraria um atalho para as permissões de outro.
+   */
+  private async assertNoEscalation(actor: RequestUser, alvo: UsuarioRow): Promise<void> {
+    if (actor.studioPermission === 'MANAGE' || alvo.id === actor.id) return;
+    const negar = () => semPoder('Esta conta tem permissões que a sua não tem: peça ao administrador do estúdio.');
+
+    const nivel = { VIEW: 0, EDIT: 1, MANAGE: 2 } as const;
+    if (nivel[alvo.studioPermission ?? 'VIEW'] > nivel[actor.studioPermission ?? 'VIEW']) throw negar();
+
+    const minha = await this.prisma.user.findUnique({ where: { id: actor.id }, select: { teamPermissions: true } });
+    if (alvo.teamPermissions.some((p) => !minha?.teamPermissions.includes(p))) throw negar();
+
+    const jogos = await this.prisma.game.findMany({ where: { studioId: studioIdOf(actor) }, select: { id: true } });
+    const comoAlvo: RequestUser = { id: alvo.id, role: 'STUDIO', studioId: alvo.studioId, studioPermission: alvo.studioPermission };
+    for (const { id } of jogos) {
+      const [deles, meus] = await Promise.all([
+        this.gameAccess.permissionsOf(comoAlvo, id),
+        this.gameAccess.permissionsOf(actor, id),
+      ]);
+      if (deles.some((p) => !meus.includes(p))) throw negar();
     }
   }
 

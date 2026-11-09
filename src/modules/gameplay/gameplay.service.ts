@@ -3,6 +3,7 @@ import type { Prisma } from '@prisma/client';
 import { rm } from 'node:fs/promises';
 import { ErrorCode } from '../../common/constants/error-codes';
 import type { RequestUser } from '../../common/interfaces/jwt-payload.interface';
+import { assertPlausibleEvents } from '../../common/security/telemetry-limits';
 import { StorageService } from '../../common/storage/storage.service';
 import { VIDEO_TYPES } from '../../common/storage/upload-filters';
 import { clamp } from '../../common/utils/numbers';
@@ -57,6 +58,11 @@ export class GameplayService {
   /** Bugs, checkpoints, microfone/webcam e gatilhos do plug-in, com o segundo da sessão (Tela 17, RN-04). */
   async events(user: RequestUser, participationId: string, eventos: SessionEventDto[]): Promise<{ received: number }> {
     const participacao = await this.inProgress(user, participationId);
+    assertPlausibleEvents(
+      eventos,
+      participacao.startedAt,
+      await this.prisma.sessionEvent.count({ where: { participationId: participacao.id } }),
+    );
     const { count } = await this.prisma.sessionEvent.createMany({
       data: eventos.map((evento) => ({
         participationId: participacao.id,

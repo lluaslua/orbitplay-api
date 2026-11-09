@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { RequestUser } from '../../common/interfaces/jwt-payload.interface';
+import { RateLimit } from '../../common/security/rate-limit.guard';
 import type { ChatMessage, GameCommunity } from '../../contracts';
 import { CommunityAccessGuard } from './community-access.guard';
 import { CommunityService } from './community.service';
@@ -27,6 +28,7 @@ export class CommunityController {
     return this.community.listMessages(gameId, channelId, user, cursor);
   }
 
+  @RateLimit({ limit: 20, windowMs: 60_000, by: 'user' })
   @Post('channels/:channelId/messages')
   sendMessage(
     @CurrentUser() user: RequestUser,
@@ -37,6 +39,7 @@ export class CommunityController {
     return this.community.sendMessage(gameId, channelId, user, text);
   }
 
+  @RateLimit({ limit: 60, windowMs: 60_000, by: 'user' })
   @Post('messages/:messageId/reaction')
   @HttpCode(HttpStatus.OK)
   toggleReaction(
