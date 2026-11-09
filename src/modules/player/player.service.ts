@@ -1,6 +1,8 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import { ELITE_TIER, MIN_WITHDRAWAL_CENTS, TEST_MODEL_LABELS } from '../../common/constants/domain.constants';
+import { DEFAULT_PLAY_RULES } from '../../common/settings/settings.defaults';
+import { SettingsService } from '../../common/settings/settings.service';
 import { daysAgo } from '../../common/utils/dates';
 import { ratio, round, sum } from '../../common/utils/numbers';
 import { runsOn } from '../../common/utils/platform';
@@ -24,6 +26,7 @@ import type {
   UnavailableReason,
 } from '../../contracts';
 import { PrismaService } from '../../prisma/prisma.service';
+import { playStatus } from '../gameplay/play-status';
 import { UsersService } from '../users/users.service';
 import { achievementProgress } from './achievements.service';
 import type { UpdatePlayerProfileDto } from './dto/player-profile.dto';
@@ -50,6 +53,7 @@ export class PlayerService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly users: UsersService,
+    private readonly settings: SettingsService,
   ) {}
 
   /** Home do jogador (Figma `197:496`). */
@@ -119,7 +123,8 @@ export class PlayerService {
           .slice(0, 5)
           .map(([genero, n]) => ({ label: genreLabel(genero), value: Math.round(ratio(n, totalGeneros) * 100) })),
       },
-      myTests: participacoes.slice(0, 5).map((p) => ({
+      // Teste de que desistiu não conta como feito.
+      myTests: participacoes.filter((p) => p.status !== 'ABANDONED').slice(0, 5).map((p) => ({
         id: p.id,
         name: p.playtest.game.name,
         progress: p.status === 'IN_PROGRESS' ? p.progress : 1,
@@ -190,6 +195,7 @@ export class PlayerService {
           requiresRecording: teste.requiresRecording,
           eliteOnly: teste.eliteOnly,
           ...(!participacao && motivo ? { unavailableReason: motivo } : {}),
+          ...(participacao?.status === 'ABANDONED' ? { unavailableReason: 'ABANDONED' as const } : {}),
         };
       });
   }
@@ -236,7 +242,7 @@ export class PlayerService {
           ? 'START'
           : card.status === 'IN_PROGRESS'
             ? 'CONTINUE'
-            : card.status === 'UNAVAILABLE'
+            : card.status === 'UNAVAILABLE' || card.status === 'ABANDONED'
               ? 'UNAVAILABLE'
               : 'REVIEW';
       return {
@@ -364,7 +370,7 @@ export class PlayerService {
   /** Aba "Meus testes" do jogo (Figma `224:5627`): o que já foi entregue. */
   async listGameHistory(playerId: string, gameId: string): Promise<PlayerGameHistory[]> {
     const participacoes = await this.prisma.participation.findMany({
-      where: { playerId, status: { not: 'IN_PROGRESS' }, playtest: { gameId } },
+      where: { playerId, status: { notIn: ['IN_PROGRESS', 'ABANDONED'] }, playtest: { gameId } },
       include: { playtest: true },
       orderBy: { finishedAt: 'desc' },
     });
@@ -400,6 +406,8 @@ export class PlayerService {
             requiresMicrophone: true,
             requiresWebcam: true,
             rewardPerSessionCents: true,
+            buildId: true,
+            estimatedMinutes: true,
             questions: { orderBy: { position: 'asc' } },
           },
         },
@@ -408,7 +416,10 @@ export class PlayerService {
     });
     if (!participacao) throw new NotFoundException({ message: 'Nenhuma sessão para revisar.' });
 
-    const feitas = await this.prisma.session.count({ where: { participation: { playerId } } });
+    const [feitas, regrasDoJogo] = await Promise.all([
+      this.prisma.session.count({ where: { participation: { playerId } } }),
+      this.settings.get('playRules', DEFAULT_PLAY_RULES),
+    ]);
     const transcricao = participacao.transcript as { at: string; text: string }[];
     return {
       id: participacao.id,
@@ -438,6 +449,7 @@ export class PlayerService {
         scaleMinLabel: pergunta.scaleMinLabel ?? undefined,
         scaleMaxLabel: pergunta.scaleMaxLabel ?? undefined,
       })),
+      play: participacao.playtest.buildId ? playStatus(participacao, participacao.playtest.estimatedMinutes, regrasDoJogo) : null,
     };
   }
 
