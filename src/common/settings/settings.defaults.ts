@@ -39,6 +39,17 @@ export interface XpRules {
 
 export const DEFAULT_XP_RULES: XpRules = { base: 50, completeFeedback: 5, bugReported: 5 };
 
+/**
+ * Tempo de jogo ativo (Tela 17): abaixo de `minSeconds` o formulário não abre;
+ * com `targetShare` do tempo estimado do teste, o teste conta como completo.
+ */
+export interface PlayRules {
+  minSeconds: number;
+  targetShare: number;
+}
+
+export const DEFAULT_PLAY_RULES: PlayRules = { minSeconds: 120, targetShare: 0.6 };
+
 /** Os links são relativos a VITE_API_URL até existir um site do plug-in. */
 export const DEFAULT_PLUGIN_INFO: PluginInfo = {
   sdkVersion: '1.0.0',

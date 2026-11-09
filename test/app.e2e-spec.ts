@@ -717,6 +717,61 @@ describe('OrbitPlay API (e2e)', () => {
       await api().get(`/api/player/tests/${testId}/build/file`).set('Authorization', `Bearer ${tester}`).set('Range', 'bytes=0-9').expect(206);
     });
 
+    describe('O jogo aberto pelo app libera a avaliação (Tela 17)', () => {
+      const jogo = (caminho: 'open' | 'heartbeat' | 'close', corpo?: object) =>
+        api().post(`/api/player/participations/${participationId}/play/${caminho}`).set('Authorization', `Bearer ${tester}`).send(corpo).expect(200);
+      const enviar = () =>
+        api()
+          .post(`/api/player/tests/${testId}/submit`)
+          .set('Authorization', `Bearer ${tester}`)
+          .send({ participationId, answers: { 'q-lista': 'Opala', 'q-grade': ['Terra: Ótima'] }, bugsReported: 0, durationSeconds: 600 });
+
+      it('não abre antes de jogar', async () => {
+        const revisao = await api().get(`/api/player/session-review?testId=${testId}`).set('Authorization', `Bearer ${tester}`).expect(200);
+        // 60% dos 25 minutos estimados; o mínimo para avaliar é de 2 minutos.
+        expect(revisao.body.play).toMatchObject({ outcome: 'NOT_OPENED', launches: 0, activeSeconds: 0, minSeconds: 120, targetSeconds: 900 });
+        expect((await enviar().expect(409)).body.code).toBe('PLAY_TOO_SHORT');
+      });
+
+      it('abrir e fechar logo não conta o tempo que o app diz ter jogado', async () => {
+        expect((await jogo('open')).body).toMatchObject({ launches: 1, playing: true });
+        const { body } = await jogo('close', { activeSeconds: 3600, exitCode: 0 });
+        expect(body).toMatchObject({ outcome: 'QUICK_EXIT', playing: false });
+        expect(body.activeSeconds).toBeLessThan(10);
+        expect((await enviar().expect(409)).body.code).toBe('PLAY_TOO_SHORT');
+      });
+
+      it('fechar logo com erro é travamento, não desistência', async () => {
+        await jogo('open');
+        // 0xC0000005 do Windows, em 32 bits com sinal.
+        const { body } = await jogo('close', { activeSeconds: 1, exitCode: -1073741819 });
+        expect(body).toMatchObject({ outcome: 'CRASHED', lastExitCode: -1073741819 });
+      });
+
+      it('batida sem o jogo aberto não conta', async () => {
+        const { body } = await jogo('heartbeat', { activeSeconds: 30 });
+        expect(body.activeSeconds).toBeLessThan(10);
+      });
+
+      it('jogar o tempo do teste conta, e a mesma batida não conta duas vezes', async () => {
+        await jogo('open');
+        // Só o relógio anda: o resto (timers do Express e do Prisma) segue real.
+        jest.useFakeTimers({
+          doNotFake: ['nextTick', 'setImmediate', 'clearImmediate', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'queueMicrotask', 'hrtime', 'performance'],
+        });
+        try {
+          jest.setSystemTime(Date.now() + 16 * 60_000);
+          const primeira = await jogo('heartbeat', { activeSeconds: 960 });
+          expect(primeira.body).toMatchObject({ outcome: 'COMPLETE', playing: true });
+          const repetida = await jogo('heartbeat', { activeSeconds: 960 });
+          expect(repetida.body.activeSeconds - primeira.body.activeSeconds).toBeLessThan(10);
+          await jogo('close', { activeSeconds: 0, exitCode: 0 });
+        } finally {
+          jest.useRealTimers();
+        }
+      });
+    });
+
     it('a avaliação traz as perguntas do estúdio e o envio grava grade e arquivo', async () => {
       const revisao = await api().get(`/api/player/session-review?testId=${testId}`).set('Authorization', `Bearer ${tester}`).expect(200);
       expect(revisao.body).toMatchObject({
@@ -749,6 +804,24 @@ describe('OrbitPlay API (e2e)', () => {
       expect(grade.options).toContainEqual({ label: 'Terra: Ótima', count: 1 });
       const print = respostas.body.questions.find((q: { id: string }) => q.id === 'q-print');
       expect(print.texts[0].text).toContain(`/files/respostas/${participationId}/q-print-`);
+    });
+
+    it('desistir devolve a vaga e não deixa recomeçar', async () => {
+      const conta = await api()
+        .post('/api/auth/register')
+        .send({ role: 'PLAYER', name: 'Tester que desiste', email: `desiste-${Date.now()}@teste.orbitplay.com`, password: 'Tester@2026x', birthDate: '2000-01-01', location: 'BRASIL' })
+        .expect(201);
+      const desistente = conta.body.token;
+      const vagas = async () => (await api().get(`/api/tests/${testId}`).set('Authorization', `Bearer ${estudio}`).expect(200)).body.currentParticipants;
+
+      await api().post(`/api/player/tests/${testId}/start`).set('Authorization', `Bearer ${desistente}`).expect(201);
+      const ocupadas = await vagas();
+      const { body } = await api().post(`/api/player/tests/${testId}/abandon`).set('Authorization', `Bearer ${desistente}`).expect(200);
+      expect(body.status).toBe('ABANDONED');
+      expect(await vagas()).toBe(ocupadas - 1);
+
+      await api().post(`/api/player/tests/${testId}/abandon`).set('Authorization', `Bearer ${desistente}`).expect(409);
+      await api().post(`/api/player/tests/${testId}/start`).set('Authorization', `Bearer ${desistente}`).expect(409);
     });
   });
 

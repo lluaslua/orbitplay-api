@@ -62,6 +62,8 @@ enum ParticipationStatus {
   PENDING_REVIEW
   COMPLETED
   REJECTED
+  /// Desistiu antes de enviar a avaliação: a vaga volta para o teste.
+  ABANDONED
 }
 
 enum RewardStatus {
@@ -499,6 +501,13 @@ model Participation {
   startedAt       DateTime            @default(now())
   finishedAt      DateTime?
   durationSeconds Int?
+  /// O jogo aberto pelo app (Tela 17): quantas vezes abriu, os segundos de jogo
+  /// ativo que o servidor somou e a última batida. `lastHeartbeatAt` nulo = jogo fechado.
+  launchCount     Int                 @default(0)
+  activeSeconds   Int                 @default(0)
+  lastHeartbeatAt DateTime?
+  /// Código de saída do jogo na última vez que fechou — diferente de 0 é erro.
+  lastExitCode    Int?
 
   session Session?
   events  SessionEvent[]
