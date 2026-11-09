@@ -12,6 +12,7 @@ import { ELITE_TIER, TEXT_QUESTION_TYPES } from '../../common/constants/domain.c
 import { ErrorCode } from '../../common/constants/error-codes';
 import type { RequestUser } from '../../common/interfaces/jwt-payload.interface';
 import {
+  DEFAULT_PLAY_RULES,
   DEFAULT_REWARD_BONUSES,
   DEFAULT_TIER_RULES,
   DEFAULT_XP_RULES,
@@ -23,6 +24,7 @@ import { runsOn } from '../../common/utils/platform';
 import type { Participation, Platform, QuestionType, SessionOutcome, SessionResult } from '../../contracts';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AnalysisService } from '../analysis/analysis.service';
+import { blocksForm, playStatus } from '../gameplay/play-status';
 import { NotificationsService } from '../notifications/notifications.service';
 import { AchievementsService } from './achievements.service';
 import type { SubmitSessionDto } from './dto/submit-session.dto';
@@ -140,7 +142,22 @@ export class ParticipationService {
     }
 
     const teste = participacao.playtest;
-    await this.assertPlausibleSubmission(participacao.id, participacao.startedAt, dto);
+    // Teste com build: a avaliação só vale depois de jogar, e o tempo é o que a API somou, não o do app (Tela 17).
+    const jogo = teste.buildId
+      ? playStatus(participacao, teste.estimatedMinutes, await this.settings.get('playRules', DEFAULT_PLAY_RULES))
+      : null;
+    if (jogo && blocksForm(jogo)) {
+      throw new ConflictException({
+        message:
+          jogo.outcome === 'NOT_OPENED'
+            ? 'Abra o jogo pelo app OrbitPlay antes de avaliar.'
+            : `Jogue pelo menos ${Math.ceil(jogo.minSeconds / 60)} min antes de avaliar.`,
+        code: ErrorCode.PLAY_TOO_SHORT,
+      });
+    }
+    const duracao = jogo ? jogo.activeSeconds : dto.durationSeconds;
+    await this.assertPlausibleSubmission(participacao.id, participacao.startedAt, dto, !jogo);
+
     const respostas = await this.storeFiles(participacao.id, teste.questions, requiredAnswers(teste.questions, dto.answers));
     // Só resposta escrita conta como texto na nota; data, hora, link de arquivo e escolhas contam como preenchidas.
     const paraNota = Object.fromEntries(
@@ -149,8 +166,8 @@ export class ParticipationService {
         .map((pergunta) => [pergunta.id, TEXT_QUESTION_TYPES.includes(pergunta.type as QuestionType) ? respostas[pergunta.id] : true]),
     ) as Record<string, AnswerValue>;
     const feedback = scoreFeedback(paraNota, dto.bugsReported);
-    // "Feedback completo": toda pergunta do formulário respondida.
-    const completo = teste.questions.every((pergunta) => pergunta.id in respostas);
+    // "Feedback completo": toda pergunta do formulário respondida — e, com build, o tempo do teste jogado.
+    const completo = teste.questions.every((pergunta) => pergunta.id in respostas) && (!jogo || jogo.outcome === 'COMPLETE');
     const [regrasXp, bonus, regrasTier] = await Promise.all([
       this.settings.get('xpRules', DEFAULT_XP_RULES),
       this.settings.get('rewardBonuses', DEFAULT_REWARD_BONUSES),
@@ -181,7 +198,7 @@ export class ParticipationService {
             level: newLevel,
             xpToNextLevel: proximoNivel,
             completedSessions: { increment: 1 },
-            secondsPlayed: { increment: dto.durationSeconds },
+            secondsPlayed: { increment: duracao },
             // A recompensa cai direto no saldo do tester ao concluir o teste.
             balanceCents: { increment: recompensa },
             rating: novaNota,
@@ -197,7 +214,7 @@ export class ParticipationService {
             rewardCents: recompensa,
             xpEarned: xp.total,
             finishedAt: new Date(),
-            durationSeconds: dto.durationSeconds,
+            durationSeconds: duracao,
             progress: 1,
           },
         });
@@ -274,7 +291,7 @@ export class ParticipationService {
         const sessao = await tx.session.create({
           data: {
             participationId: participacao.id,
-            durationSeconds: dto.durationSeconds,
+            durationSeconds: duracao,
             bugsFound: dto.bugsReported,
             feedbackQuality: feedback.total,
             overallRating: ratingFrom(teste.questions, respostas),
@@ -334,9 +351,14 @@ export class ParticipationService {
    * A API só aceita o que cabe no tempo da participação, no que foi registrado
    * em eventos e em tamanhos razoáveis (bônus de bug e XP dependem desses números).
    */
-  private async assertPlausibleSubmission(participationId: string, startedAt: Date, dto: SubmitSessionDto): Promise<void> {
+  private async assertPlausibleSubmission(
+    participationId: string,
+    startedAt: Date,
+    dto: SubmitSessionDto,
+    conferirDuracao: boolean,
+  ): Promise<void> {
     const decorridos = Math.floor((Date.now() - startedAt.getTime()) / 1000);
-    if (dto.durationSeconds > decorridos + 120) {
+    if (conferirDuracao && dto.durationSeconds > decorridos + 120) {
       throw new UnprocessableEntityException({ message: 'A duração informada passa do tempo da sessão.', code: ErrorCode.TELEMETRY_REJECTED });
     }
     if (dto.bugsReported > 0) {
@@ -352,6 +374,33 @@ export class ParticipationService {
         throw new BadRequestException({ message: 'Uma das respostas é grande demais.', code: ErrorCode.VALIDATION_ERROR });
       }
     }
+  }
+
+  /**
+   * "Desistir do teste" (Tela 17): a participação fecha sem avaliação e a vaga
+   * volta para o teste — o que estava cheio reabre. O mesmo teste não recomeça.
+   */
+  async abandon(user: RequestUser, testId: string): Promise<Participation> {
+    await this.prisma.$transaction(async (tx) => {
+      const { count } = await tx.participation.updateMany({
+        where: { playtestId: testId, playerId: user.id, status: 'IN_PROGRESS' },
+        data: { status: 'ABANDONED', finishedAt: new Date(), lastHeartbeatAt: null },
+      });
+      if (count === 0) {
+        throw new ConflictException({ message: 'Esta participação não está em andamento.', code: ErrorCode.NOT_IN_PROGRESS });
+      }
+      await tx.$executeRaw`
+        UPDATE "Playtest" SET
+          "currentParticipants" = GREATEST("currentParticipants" - 1, 0),
+          "status" = CASE WHEN "status" = 'FULL' AND "currentParticipants" - 1 < "slots" THEN 'ACTIVE' ELSE "status" END
+        WHERE "id" = ${testId}`;
+    });
+    return toParticipation(
+      await this.prisma.participation.findUniqueOrThrow({
+        where: { playtestId_playerId: { playtestId: testId, playerId: user.id } },
+        include: participationInclude,
+      }),
+    );
   }
 
   /**

@@ -76,4 +76,9 @@ export interface BuildDownloadInfo {
   sha256: string | null;
   /** Relativo a VITE_API_URL. Aceita `Range`, então o download pode ser retomado (Tela 16, RN-04). */
   downloadPath: string;
+  /**
+   * "Jogável com controle": o Windows não conta o controle como uso do
+   * computador, então o app não desconta o tempo ocioso desse jogo (Tela 17).
+   */
+  requiresController: boolean;
 }

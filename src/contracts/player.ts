@@ -1,3 +1,4 @@
+import type { PlayStatus } from './gameplay';
 import type { FormQuestion } from './test';
 
 export type ParticipationStatus =
@@ -6,7 +7,8 @@ export type ParticipationStatus =
   | 'PENDING_REVIEW'
   | 'COMPLETED'
   | 'UNAVAILABLE'
-  | 'REJECTED';
+  | 'REJECTED'
+  | 'ABANDONED';
 
 export type RewardStatus = 'PENDING' | 'VALIDATED' | 'PAID' | 'REJECTED';
 
@@ -37,7 +39,7 @@ export interface AvailableTest {
  * Motivo do UNAVAILABLE. `DEVICE_INCOMPATIBLE` é o "Indisponível para seu
  * dispositivo" (Figma `199:1291`): a build não roda no sistema do app.
  */
-export type UnavailableReason = 'NO_SLOTS' | 'CLOSED' | 'DEVICE_INCOMPATIBLE' | 'ELITE_ONLY';
+export type UnavailableReason = 'NO_SLOTS' | 'CLOSED' | 'DEVICE_INCOMPATIBLE' | 'ELITE_ONLY' | 'ABANDONED';
 
 export interface Participation {
   id: string;
@@ -106,6 +108,8 @@ export interface PlayerSessionReview {
   transcript: { at: string; text: string }[];
   /** O formulário que o estúdio montou na etapa 2 — o que o jogador responde. */
   questions: FormQuestion[];
+  /** Como foi o jogo, que decide se o formulário abre. `null` no teste sem build. */
+  play: PlayStatus | null;
 }
 
 /**

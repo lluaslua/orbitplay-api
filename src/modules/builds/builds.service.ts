@@ -135,7 +135,7 @@ export class BuildsService implements OnModuleInit {
    * depois do download e da validação — o hash vai junto para o app conferir.
    */
   async downloadInfo(user: RequestUser, testId: string): Promise<BuildDownloadInfo> {
-    const build = await this.buildOfParticipation(user, testId);
+    const { build, requiresController } = await this.buildOfParticipation(user, testId);
     return {
       testId,
       fileName: build.fileName,
@@ -143,11 +143,12 @@ export class BuildsService implements OnModuleInit {
       version: build.version,
       sha256: build.sha256,
       downloadPath: `/player/tests/${testId}/build/file`,
+      requiresController,
     };
   }
 
   async downloadPath(user: RequestUser, testId: string): Promise<{ path: string; fileName: string }> {
-    const build = await this.buildOfParticipation(user, testId);
+    const { build } = await this.buildOfParticipation(user, testId);
     return { path: this.storage.pathOf(build.storageKey!, 'private'), fileName: build.fileName };
   }
 
@@ -163,7 +164,7 @@ export class BuildsService implements OnModuleInit {
     if (!build || build.status !== 'VALID' || !build.storageKey) {
       throw new NotFoundException({ message: 'Este teste ainda não tem build para download.' });
     }
-    return build;
+    return { build, requiresController: participacao.playtest.requiresController };
   }
 
   private async findOwned(user: RequestUser, gameId: string, buildId: string): Promise<Build> {

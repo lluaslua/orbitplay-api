@@ -113,6 +113,13 @@ export class PlayerController {
     return this.participations.start(user, testId, clientPlatform(platform));
   }
 
+  /** "Desistir do teste": devolve a vaga sem enviar a avaliação. */
+  @Post('tests/:testId/abandon')
+  @HttpCode(HttpStatus.OK)
+  abandon(@CurrentUser() user: RequestUser, @Param('testId') testId: string): Promise<Participation> {
+    return this.participations.abandon(user, testId);
+  }
+
   @RateLimit({ limit: 10, windowMs: 60_000, by: 'user' })
   @Idempotent()
   @Post('tests/:testId/submit')
