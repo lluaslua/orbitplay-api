@@ -15,6 +15,7 @@ import type { AdminUserRow, AdminWithdrawalRow, AuditLogEntry, StudioSummary } f
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { AuthService } from '../auth/auth.service';
+import { markRewardsPaid } from '../wallet/payout';
 import { NotificationsService } from '../notifications/notifications.service';
 import { UNUSABLE_PASSWORD_HASH } from '../users/password';
 import { normalizeEmail } from '../users/users.service';
@@ -297,19 +298,7 @@ export class AdminService {
         await tx.playerProfile.update({ where: { userId: atual.playerId }, data: { balanceCents: { increment: atual.amountCents } } });
         await tx.ledgerEntry.updateMany({ where: { withdrawalId: id }, data: { status: 'CANCELED' } });
       } else {
-        const validadas = await tx.participation.findMany({
-          where: { playerId: atual.playerId, rewardStatus: 'VALIDATED' },
-          orderBy: { finishedAt: 'asc' },
-          select: { id: true, rewardCents: true },
-        });
-        let restante = atual.amountCents;
-        const pagas: string[] = [];
-        for (const p of validadas) {
-          if (p.rewardCents > restante) break;
-          restante -= p.rewardCents;
-          pagas.push(p.id);
-        }
-        if (pagas.length) await tx.participation.updateMany({ where: { id: { in: pagas } }, data: { rewardStatus: 'PAID' } });
+        await markRewardsPaid(tx, atual.playerId, atual.amountCents);
       }
 
       await this.audit.record(

@@ -1,12 +1,14 @@
 import { ForbiddenException, Injectable, UnprocessableEntityException } from '@nestjs/common';
 import type { Withdrawal } from '@prisma/client';
-import { MIN_WITHDRAWAL_CENTS } from '../../common/constants/domain.constants';
+import { MIN_WITHDRAWAL_CENTS, WITHDRAWAL_DAILY_LIMIT_CENTS } from '../../common/constants/domain.constants';
 import { ErrorCode } from '../../common/constants/error-codes';
 import type { RequestUser } from '../../common/interfaces/jwt-payload.interface';
 import { formatBRL } from '../../common/utils/money';
 import type { Wallet, WithdrawalInfo } from '../../contracts';
 import { PrismaService } from '../../prisma/prisma.service';
+import { AuditService } from '../audit/audit.service';
 import type { WithdrawalDto } from './dto/withdrawal.dto';
+import { normalizePixKey } from './pix-key';
 
 /**
  * Carteira do jogador (Tela 13). O saldo recebe a recompensa assim que o teste
@@ -15,7 +17,10 @@ import type { WithdrawalDto } from './dto/withdrawal.dto';
  */
 @Injectable()
 export class WalletService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly audit: AuditService,
+  ) {}
 
   async getWallet(user: RequestUser): Promise<Wallet> {
     const [perfil, extrato, saques] = await Promise.all([
@@ -29,6 +34,7 @@ export class WalletService {
       balanceCents: perfil.balanceCents,
       pendingBalanceCents: perfil.pendingBalanceCents,
       minWithdrawalCents: MIN_WITHDRAWAL_CENTS,
+      dailyLimitCents: WITHDRAWAL_DAILY_LIMIT_CENTS,
       canWithdraw: bloqueio === null,
       withdrawBlockedReason: bloqueio,
       transactions: extrato.map((e) => ({
@@ -58,8 +64,17 @@ export class WalletService {
       if (bloqueio) throw bloqueado(bloqueio);
       if (amountCents > perfil.balanceCents) throw bloqueado('O valor passa do saldo disponível.');
 
+      // Teto de 24 h, somando o que já saiu: vários saques pequenos não furam o limite.
+      const { _sum } = await tx.withdrawal.aggregate({
+        where: { playerId: user.id, status: { not: 'REJECTED' }, createdAt: { gte: new Date(Date.now() - 24 * 3_600_000) } },
+        _sum: { amountCents: true },
+      });
+      if ((_sum.amountCents ?? 0) + amountCents > WITHDRAWAL_DAILY_LIMIT_CENTS) {
+        throw bloqueado(`O limite de saque é de ${formatBRL(WITHDRAWAL_DAILY_LIMIT_CENTS)} a cada 24 horas.`);
+      }
+
       await tx.playerProfile.update({ where: { userId: user.id }, data: { balanceCents: { decrement: amountCents } } });
-      const criado = await tx.withdrawal.create({ data: { playerId: user.id, amountCents, pixKey: pixKey.trim() } });
+      const criado = await tx.withdrawal.create({ data: { playerId: user.id, amountCents, pixKey: normalizePixKey(pixKey) } });
       await tx.ledgerEntry.create({
         data: {
           playerId: user.id,
@@ -70,6 +85,11 @@ export class WalletService {
           withdrawalId: criado.id,
         },
       });
+      // Só o valor vai para a auditoria: a chave Pix não é gravada fora do saque.
+      await this.audit.record(
+        { actorId: user.id, action: 'withdrawal.requested', targetType: 'withdrawal', targetId: criado.id, data: { amountCents } },
+        tx,
+      );
       return criado;
     });
     return toWithdrawalInfo(saque);

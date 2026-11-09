@@ -34,6 +34,8 @@ export interface Wallet {
   balanceCents: number;
   pendingBalanceCents: number;
   minWithdrawalCents: number;
+  /** Teto de saque em 24 h; o app mostra, a API é quem barra. */
+  dailyLimitCents: number;
   canWithdraw: boolean;
   withdrawBlockedReason: string | null;
   transactions: WalletTransaction[];
