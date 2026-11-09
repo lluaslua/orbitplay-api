@@ -87,13 +87,13 @@ export class ParticipationService {
       const criada = await this.prisma.$transaction(async (tx) => {
         // Reserva atômica: dois jogadores na última vaga não entram os dois.
         const reservou = await tx.$executeRaw`
-          UPDATE "Playtest" SET "currentParticipants" = "currentParticipants" + 1
-          WHERE "id" = ${testId} AND "status" = 'ACTIVE' AND ("untilDisabled" OR "currentParticipants" < "slots")`;
+            UPDATE "Playtest" SET "currentParticipants" = "currentParticipants" + 1
+            WHERE "id" = ${testId} AND "status" = 'ACTIVE' AND ("untilDisabled" OR "currentParticipants" < "slots")`;
         if (reservou === 0) throw semVagas();
 
         await tx.$executeRaw`
-          UPDATE "Playtest" SET "status" = 'FULL'
-          WHERE "id" = ${testId} AND NOT "untilDisabled" AND "currentParticipants" >= "slots"`;
+            UPDATE "Playtest" SET "status" = 'FULL'
+            WHERE "id" = ${testId} AND NOT "untilDisabled" AND "currentParticipants" >= "slots"`;
 
         if (convidado) {
           await tx.retestInvite.updateMany({ where: { playtestId: testId, playerId: user.id }, data: { acceptedAt: new Date() } });
@@ -114,7 +114,7 @@ export class ParticipationService {
 
   /**
    * Envia a sessão (Tela 18 → 19). Tudo numa transação: nota, XP, nível,
-   * recompensa pendente e conquistas saem juntos ou nenhum sai. Um segundo
+   * recompensa no saldo e conquistas saem juntos ou nenhum sai. Um segundo
    * envio devolve o resultado do primeiro (Tela 18 RN-03, Tela 19 RN-03).
    */
   async submit(user: RequestUser, testId: string, dto: SubmitSessionDto): Promise<SessionResult> {
@@ -180,7 +180,8 @@ export class ParticipationService {
             xpToNextLevel: proximoNivel,
             completedSessions: { increment: 1 },
             secondsPlayed: { increment: dto.durationSeconds },
-            pendingBalanceCents: { increment: recompensa },
+            // A recompensa cai direto no saldo do tester ao concluir o teste.
+            balanceCents: { increment: recompensa },
             rating: novaNota,
             tier: tierFor(perfil.tier, newLevel, novaNota, regrasTier),
           },
@@ -199,13 +200,14 @@ export class ParticipationService {
           },
         });
 
-        // A recompensa entra pendente: vai ao saldo quando o estúdio validar (Tela 19, RN-04).
+        // A recompensa entra disponível na hora. Se o estúdio recusar a sessão
+        // depois, a validação estorna este lançamento (ver SessionsService.validate).
         if (recompensa > 0) {
           await tx.ledgerEntry.create({
             data: {
               playerId: user.id,
               type: 'REWARD',
-              status: 'PENDING',
+              status: 'AVAILABLE',
               amountCents: recompensa,
               description: `${teste.game.name} — ${teste.title}`,
               participationId: participacao.id,

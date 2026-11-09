@@ -83,9 +83,9 @@ export class SessionsService {
   }
 
   /**
-   * Aprova ou recusa a sessão. Aprovada, a recompensa sai de "em análise" e vai
-   * ao saldo do jogador; recusada, é cancelada (Tela 19, RN-01 e RN-04). Uma
-   * decisão só: repetir recebe 409.
+   * Aprova ou recusa a sessão. A recompensa já está no saldo do jogador desde o
+   * envio do teste: aprovada, ela fica; recusada, é estornada (Tela 19, RN-01).
+   * Uma decisão só: repetir recebe 409.
    */
   async validate(user: RequestUser, id: string, { approved, note }: SessionValidationDto): Promise<Session> {
     await this.access.assertForSession(user, id, 'MANAGE_TESTS');
@@ -107,17 +107,36 @@ export class SessionsService {
         throw new ConflictException({ message: 'Esta sessão já foi avaliada.', code: ErrorCode.SESSION_ALREADY_VALIDATED });
       }
 
+      // Desde que a recompensa cai no saldo no envio do teste, o lançamento já
+      // nasce AVAILABLE e aprovar não paga de novo. Sessões antigas ainda têm o
+      // lançamento PENDING (valor em "em análise") e seguem o fluxo de antes.
+      const lancamento = await tx.ledgerEntry.findUnique({ where: { participationId: participacao.id } });
+      const jaNoSaldo = lancamento?.status === 'AVAILABLE';
+
       await tx.ledgerEntry.updateMany({
         where: { participationId: participacao.id },
         data: { status: approved ? 'AVAILABLE' : 'CANCELED' },
       });
-      await tx.playerProfile.update({
-        where: { userId: participacao.playerId },
-        data: {
-          pendingBalanceCents: { decrement: participacao.rewardCents },
-          ...(approved ? { balanceCents: { increment: participacao.rewardCents } } : {}),
-        },
-      });
+
+      if (jaNoSaldo) {
+        // Recusada: estorna o que foi creditado, sem deixar o saldo negativo
+        // caso o tester já tenha sacado parte do valor.
+        if (!approved) {
+          const perfil = await tx.playerProfile.findUniqueOrThrow({ where: { userId: participacao.playerId } });
+          await tx.playerProfile.update({
+            where: { userId: participacao.playerId },
+            data: { balanceCents: { decrement: Math.min(participacao.rewardCents, perfil.balanceCents) } },
+          });
+        }
+      } else {
+        await tx.playerProfile.update({
+          where: { userId: participacao.playerId },
+          data: {
+            pendingBalanceCents: { decrement: participacao.rewardCents },
+            ...(approved ? { balanceCents: { increment: participacao.rewardCents } } : {}),
+          },
+        });
+      }
       await tx.session.update({
         where: { id },
         data: { validatedAt: new Date(), validatedById: user.id, validationNote: note },
@@ -128,28 +147,28 @@ export class SessionsService {
       const gameId = participacao.playtest.gameId;
       const liberadas = approved
         ? await this.achievements.unlockGameRules(tx, participacao.playerId, gameId, [
-            'GAME_FIRST_REWARD',
-            ...(sessao.bugsFound > 0 ? ['BUG_CONFIRMED'] : []),
-          ])
+          'GAME_FIRST_REWARD',
+          ...(sessao.bugsFound > 0 ? ['BUG_CONFIRMED'] : []),
+        ])
         : [];
 
       await this.notifications.notify(
         participacao.playerId,
         approved
           ? {
-              type: 'REWARD_RELEASED',
-              title: 'Recompensa liberada!',
-              body: `${formatBRL(participacao.rewardCents)} de ${participacao.playtest.game.name} já estão no seu saldo.`,
-              link: '/player/wallet',
-              data: { sessionId: id, gameId, rewardCents: participacao.rewardCents, achievements: liberadas.map((c) => c.title) },
-            }
+            type: 'REWARD_RELEASED',
+            title: 'Recompensa liberada!',
+            body: `${formatBRL(participacao.rewardCents)} de ${participacao.playtest.game.name} já estão no seu saldo.`,
+            link: '/player/wallet',
+            data: { sessionId: id, gameId, rewardCents: participacao.rewardCents, achievements: liberadas.map((c) => c.title) },
+          }
           : {
-              type: 'REWARD_REJECTED',
-              title: 'Sessão não aprovada',
-              body: note ? `O estúdio recusou a sessão: ${note}` : `O estúdio de ${participacao.playtest.game.name} recusou a sessão.`,
-              link: `/player/games/${gameId}`,
-              data: { sessionId: id, gameId },
-            },
+            type: 'REWARD_REJECTED',
+            title: 'Sessão não aprovada',
+            body: note ? `O estúdio recusou a sessão: ${note}` : `O estúdio de ${participacao.playtest.game.name} recusou a sessão.`,
+            link: `/player/games/${gameId}`,
+            data: { sessionId: id, gameId },
+          },
         tx,
       );
     });

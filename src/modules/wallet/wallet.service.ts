@@ -9,8 +9,9 @@ import { PrismaService } from '../../prisma/prisma.service';
 import type { WithdrawalDto } from './dto/withdrawal.dto';
 
 /**
- * Carteira do jogador (Tela 13). O saldo só recebe recompensa validada pelo
- * estúdio; o que ainda está em análise fica em `pendingBalanceCents`.
+ * Carteira do jogador (Tela 13). O saldo recebe a recompensa assim que o teste
+ * é enviado; `pendingBalanceCents` só guarda o que sobrou de sessões antigas
+ * ainda em análise.
  */
 @Injectable()
 export class WalletService {
