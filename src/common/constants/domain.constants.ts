@@ -339,5 +339,8 @@ export const DEFAULT_BOOST_CENTS = 15;
 /** Saque mínimo da carteira do jogador. */
 export const MIN_WITHDRAWAL_CENTS = 2000;
 
+/** Teto do que um jogador saca em 24 h, somando os saques que não foram recusados. */
+export const WITHDRAWAL_DAILY_LIMIT_CENTS = 100_000;
+
 /** Validade do link de redefinição de senha. */
 export const RESET_TOKEN_TTL_MINUTES = 60;

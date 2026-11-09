@@ -80,6 +80,10 @@ export default () => {
       dir: process.env.STORAGE_DIR ?? 'storage',
       buildMaxSizeMb: inteiro('BUILD_MAX_SIZE_MB', 4096),
     },
+    wallet: {
+      /** Segundos até o Pix simulado "pagar" um saque. 0 desliga: o saque fica em análise até a Central processar. */
+      simulatedPayoutSeconds: inteiro('SIMULATED_PAYOUT_SECONDS', 15),
+    },
     payments: {
       provider,
       /** Segredo HMAC do webhook do provedor (obrigatório para o webhook ser aceito). */

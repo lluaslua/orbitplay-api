@@ -4,6 +4,7 @@ import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/app.setup';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { WithdrawalSettlementService } from '../src/modules/wallet/withdrawal-settlement.service';
 
 /**
  * Fluxos de ponta a ponta contra o banco do .env, depois de `npm run db:seed`.
@@ -26,6 +27,8 @@ describe('OrbitPlay API (e2e)', () => {
   beforeAll(async () => {
     // Esta suíte dispara centenas de chamadas do mesmo IP: o limite de taxa é testado em security.e2e-spec.ts.
     process.env.RATE_LIMIT_DISABLED = 'true';
+    // O Pix simulado roda sozinho de 5 em 5 s; aqui ele é chamado à mão para o saque não mudar de status no meio de um caso.
+    process.env.SIMULATED_PAYOUT_SECONDS = '0';
     const modulo = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = modulo.createNestApplication<NestExpressApplication>({ bodyParser: false });
     configureApp(app);
@@ -182,6 +185,11 @@ describe('OrbitPlay API (e2e)', () => {
         participationId = a.body.id;
         expect(b.body.id).toBe(participationId);
         expect(a.body.status).toBe('IN_PROGRESS');
+
+        // A verba do teste diminui: cada vaga ocupada tira uma recompensa do que sobra (2 vagas × R$ 1,00).
+        const teste = await api().get(`/api/tests/${testId}`).set('Authorization', `Bearer ${estudio}`).expect(200);
+        expect(teste.body.currentParticipants).toBe(1);
+        expect(teste.body.budget.slots - teste.body.currentParticipants).toBe(1);
       });
 
       it('recusa o formulário sem a resposta obrigatória', async () => {
@@ -216,6 +224,11 @@ describe('OrbitPlay API (e2e)', () => {
         // Crédito base 100 + feedback completo 5 + bug reportado 5 (Figma `287:5085`).
         expect(outcome.body.reward.totalCents).toBe(110);
         expect(outcome.body.level.lines).toEqual(['XP base: 50', 'Bônus por feedback completo: +5', 'Bônus por bug reportado: +5']);
+
+        // O saldo do tester sobe no envio, sem esperar o estúdio avaliar.
+        const carteira = await api().get('/api/player/wallet').set('Authorization', `Bearer ${jogador}`).expect(200);
+        expect(carteira.body.balanceCents).toBe(saldoAntes + 110);
+        expect(carteira.body.transactions[0]).toMatchObject({ type: 'REWARD', status: 'AVAILABLE', amountCents: 110 });
       });
 
       it('a aprovação do estúdio leva a recompensa ao saldo, uma vez', async () => {
@@ -245,6 +258,44 @@ describe('OrbitPlay API (e2e)', () => {
           .send({ testId })
           .expect(422);
         expect(convite.body.code).toBe('RETEST_NOT_ALLOWED');
+      });
+
+      it('um segundo tester completa o teste: a verba acaba, o teste enche e a recusa do estúdio estorna o saldo', async () => {
+        const email = `segundo-${Date.now()}@teste.orbitplay.com`;
+        const conta = await api()
+          .post('/api/auth/register')
+          .send({ role: 'PLAYER', name: 'Segundo tester', email, password: 'Tester@2026x', birthDate: '2000-01-01', location: 'BRASIL' })
+          .expect(201);
+        const segundo = conta.body.token as string;
+        const carteira = async () =>
+          (await api().get('/api/player/wallet').set('Authorization', `Bearer ${segundo}`).expect(200)).body;
+
+        const comeco = await api().post(`/api/player/tests/${testId}/start`).set('Authorization', `Bearer ${segundo}`).expect(201);
+        const cheio = await api().get(`/api/tests/${testId}`).set('Authorization', `Bearer ${estudio}`).expect(200);
+        expect(cheio.body.currentParticipants).toBe(2);
+        expect(cheio.body.status).toBe('FULL');
+
+        const envio = await api()
+          .post(`/api/player/tests/${testId}/submit`)
+          .set('Authorization', `Bearer ${segundo}`)
+          .send({ participationId: comeco.body.id, answers: { 'q-e2e-1': 'A' }, bugsReported: 0, durationSeconds: 30 })
+          .expect(201);
+        const ganho = envio.body.rewardCents as number;
+        expect(ganho).toBeGreaterThan(0);
+        expect((await carteira()).balanceCents).toBe(ganho);
+
+        const sessao = await app
+          .get(PrismaService)
+          .session.findFirstOrThrow({ where: { participation: { playtestId: testId, playerId: (await app.get(PrismaService).user.findUniqueOrThrow({ where: { email } })).id } } });
+        await api()
+          .post(`/api/sessions/${sessao.id}/validation`)
+          .set('Authorization', `Bearer ${estudio}`)
+          .send({ approved: false, note: 'Sem gravação.' })
+          .expect(200);
+
+        const depois = await carteira();
+        expect(depois.balanceCents).toBe(0);
+        expect(depois.transactions[0]).toMatchObject({ type: 'REWARD', status: 'CANCELED', amountCents: ganho });
       });
     });
   });
@@ -925,6 +976,103 @@ describe('OrbitPlay API (e2e)', () => {
         .send({ role: 'ADMIN' })
         .expect(422);
       expect(body.code).toBe('LAST_OWNER');
+    });
+  });
+  describe('Carteira e saque simulado (Tela 13)', () => {
+    let token: string;
+    let userId: string;
+    const prisma = () => app.get(PrismaService);
+    const carteira = async () =>
+      (await api().get('/api/player/wallet').set('Authorization', `Bearer ${token}`).expect(200)).body;
+    const sacar = (corpo: object, chave = `saque-${Date.now()}-${Math.random()}`) =>
+      api().post('/api/player/withdrawals').set('Authorization', `Bearer ${token}`).set('Idempotency-Key', chave).send(corpo);
+    const pixValido = '123.456.789-09';
+
+    beforeAll(async () => {
+      const email = `saque-${Date.now()}@teste.orbitplay.com`;
+      const conta = await api()
+        .post('/api/auth/register')
+        .send({ role: 'PLAYER', name: 'Tester do saque', email, password: 'Tester@2026x', birthDate: '2000-01-01', location: 'BRASIL' })
+        .expect(201);
+      token = conta.body.token;
+      userId = (await prisma().user.findUniqueOrThrow({ where: { email } })).id;
+      await prisma().playerProfile.update({ where: { userId }, data: { balanceCents: 150_000 } });
+    });
+
+    it('recusa chave que não é Pix', async () => {
+      const { body } = await sacar({ amountCents: 2000, pixKey: 'minha chave' }).expect(400);
+      expect(body.fields.pixKey).toMatch(/chave Pix válida/);
+    });
+
+    it('recusa valor acima do saldo sem mexer no saldo', async () => {
+      const antes = (await carteira()).balanceCents;
+      const { body } = await sacar({ amountCents: antes + 1, pixKey: pixValido }).expect(422);
+      expect(body.code).toBe('WITHDRAWAL_BLOCKED');
+      expect((await carteira()).balanceCents).toBe(antes);
+    });
+
+    it('o saque sai do saldo na hora, mascara a chave e fica em análise', async () => {
+      const antes = await carteira();
+      expect(antes.dailyLimitCents).toBe(100_000);
+      const { body } = await sacar({ amountCents: 5000, pixKey: pixValido }).expect(201);
+      expect(body).toMatchObject({ amountCents: 5000, status: 'REQUESTED', pixKey: '•••8909' });
+
+      const depois = await carteira();
+      expect(depois.balanceCents).toBe(antes.balanceCents - 5000);
+      expect(depois.canWithdraw).toBe(false);
+      expect(depois.withdrawBlockedReason).toBe('Já existe um saque em análise.');
+      expect(depois.transactions[0]).toMatchObject({ type: 'WITHDRAWAL', amountCents: -5000 });
+    });
+
+    it('não deixa pedir outro saque enquanto um está em análise', async () => {
+      const { body } = await sacar({ amountCents: 2000, pixKey: pixValido }).expect(422);
+      expect(body.code).toBe('WITHDRAWAL_BLOCKED');
+    });
+
+    it('o Pix simulado paga o saque em análise e avisa o tester', async () => {
+      expect(await app.get(WithdrawalSettlementService).settleDue(0)).toBeGreaterThanOrEqual(1);
+
+      const saques = (await carteira()).withdrawals;
+      expect(saques[0]).toMatchObject({ amountCents: 5000, status: 'PAID' });
+      expect(saques[0].note).toMatch(/simulado/i);
+      expect((await carteira()).canWithdraw).toBe(true);
+
+      const avisos = await api().get('/api/notifications').set('Authorization', `Bearer ${token}`).expect(200);
+      expect(JSON.stringify(avisos.body)).toContain('Saque pago!');
+      // Pagar de novo não debita nem paga duas vezes.
+      expect(await app.get(WithdrawalSettlementService).settleDue(0)).toBe(0);
+    });
+
+    it('a Central ainda pode recusar um saque e o valor volta para o saldo', async () => {
+      const antes = (await carteira()).balanceCents;
+      const { body: saque } = await sacar({ amountCents: 3000, pixKey: 'tester@teste.orbitplay.com' }).expect(201);
+      await api()
+        .patch(`/api/admin/withdrawals/${saque.id}`)
+        .set('Authorization', `Bearer ${owner}`)
+        .send({ status: 'REJECTED', note: 'Chave não confere.' })
+        .expect(200);
+      expect((await carteira()).balanceCents).toBe(antes);
+    });
+
+    it('barra o saque que estoura o teto de 24 horas, somando os anteriores', async () => {
+      await prisma().playerProfile.update({ where: { userId }, data: { balanceCents: 500_000 } });
+      const { body } = await sacar({ amountCents: 100_000, pixKey: pixValido }).expect(422);
+      expect(body.message).toMatch(/limite de saque/i);
+    });
+
+    it('repetir a mesma Idempotency-Key não saca duas vezes', async () => {
+      await prisma().withdrawal.updateMany({ where: { playerId: userId, status: 'REQUESTED' }, data: { status: 'PAID' } });
+      await prisma().withdrawal.deleteMany({ where: { playerId: userId } });
+      const antes = (await carteira()).balanceCents;
+      const chave = `repetida-${Date.now()}`;
+      const primeiro = await sacar({ amountCents: 2000, pixKey: pixValido }, chave).expect(201);
+      const segundo = await sacar({ amountCents: 2000, pixKey: pixValido }, chave);
+      expect(segundo.body.id).toBe(primeiro.body.id);
+      expect((await carteira()).balanceCents).toBe(antes - 2000);
+    });
+
+    it('estúdio não acessa a carteira do tester', async () => {
+      await api().get('/api/player/wallet').set('Authorization', `Bearer ${estudio}`).expect(403);
     });
   });
 });
