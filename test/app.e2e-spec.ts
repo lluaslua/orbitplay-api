@@ -5,6 +5,10 @@ import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/app.setup';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { WithdrawalSettlementService } from '../src/modules/wallet/withdrawal-settlement.service';
+import { cadastrar, espiarEmails, ultimoCodigo } from './cadastro';
+
+// Nada de e-mail real nos testes: sem SMTP o MailService manda para o log (o .env não sobrescreve).
+process.env.SMTP_HOST = '';
 
 /**
  * Fluxos de ponta a ponta contra o banco do .env, depois de `npm run db:seed`.
@@ -471,20 +475,17 @@ describe('OrbitPlay API (e2e)', () => {
     let novato: string;
 
     beforeAll(async () => {
-      const { body } = await api()
-        .post('/api/auth/register')
-        .send({
-          role: 'PLAYER',
-          name: 'Tester e2e',
-          email: `e2e-${Date.now()}@teste.orbitplay.com`,
-          password: 'Orbit#Teste-2026',
-          birthDate: '2000-01-01',
-          location: 'BRASIL',
-          playerType: 'CASUAL',
-          archetype: 'EXPLORER',
-        })
-        .expect(201);
-      novato = body.token;
+      const sessao = await cadastrar(app, {
+        role: 'PLAYER',
+        name: 'Tester e2e',
+        email: `e2e-${Date.now()}@teste.orbitplay.com`,
+        password: 'Orbit#Teste-2026',
+        birthDate: '2000-01-01',
+        location: 'BRASIL',
+        playerType: 'CASUAL',
+        archetype: 'EXPLORER',
+      });
+      novato = sessao.token;
     });
 
     it('a aba ELITE lista só jogos com teste exclusivo', async () => {
@@ -546,10 +547,7 @@ describe('OrbitPlay API (e2e)', () => {
     });
 
     it('quem nunca jogou não entra', async () => {
-      const { body: conta } = await api()
-        .post('/api/auth/register')
-        .send({ role: 'PLAYER', name: 'Curioso', email: `curioso-${Date.now()}@teste.orbitplay.com`, password: 'Orbit#Teste-2026' })
-        .expect(201);
+      const conta = await cadastrar(app, { role: 'PLAYER', name: 'Curioso', email: `curioso-${Date.now()}@teste.orbitplay.com`, password: 'Orbit#Teste-2026' });
       const { body } = await api().get('/api/games/game-001/community').set('Authorization', `Bearer ${conta.token}`).expect(403);
       expect(body.code).toBe('COMMUNITY_RESTRICTED');
     });
@@ -563,10 +561,7 @@ describe('OrbitPlay API (e2e)', () => {
   describe('Cadastro e conta (tela de registro do app)', () => {
     it('cria o estúdio com organização própria e entra', async () => {
       const email = `estudio-${Date.now()}@e2e.orbitplay.com`;
-      const { body } = await api()
-        .post('/api/auth/register')
-        .send({ role: 'STUDIO', name: 'Ana Dev', email, password: 'Orbit#Teste-2026', organization: 'Estúdio e2e', website: 'https://e2e.dev' })
-        .expect(201);
+      const body = await cadastrar(app, { role: 'STUDIO', name: 'Ana Dev', email, password: 'Orbit#Teste-2026', organization: 'Estúdio e2e', website: 'https://e2e.dev' });
       expect(body.user.role).toBe('STUDIO');
       expect(body.user.studio).toMatchObject({ organization: 'Estúdio e2e', permission: 'MANAGE' });
       expect(body.user.studio.studioId).not.toBe(body.user.id);
@@ -577,33 +572,236 @@ describe('OrbitPlay API (e2e)', () => {
 
       const repetido = await api()
         .post('/api/auth/register')
-        .send({ role: 'STUDIO', name: 'Ana Dev', email, password: 'Orbit#Teste-2026', organization: 'Outra' })
+        .send({ role: 'STUDIO', name: 'Ana Dev', email, password: 'Orbit#Teste-2026', organization: 'Outra', acceptTerms: true })
         .expect(409);
       expect(repetido.body.code).toBe('EMAIL_TAKEN');
     });
 
     it('cria o tester com os dados de público', async () => {
-      const { body } = await api()
-        .post('/api/auth/register')
-        .send({
-          role: 'PLAYER',
-          name: 'Bia Tester',
-          email: `tester-${Date.now()}@e2e.orbitplay.com`,
-          password: 'Orbit#Teste-2026',
-          birthDate: '1999-05-10',
-          location: 'BRASIL',
-          playerType: 'EXPERIENT',
-          archetype: 'EXPLORER',
-        })
-        .expect(201);
+      const body = await cadastrar(app, {
+        role: 'PLAYER',
+        name: 'Bia Tester',
+        email: `tester-${Date.now()}@e2e.orbitplay.com`,
+        password: 'Orbit#Teste-2026',
+        birthDate: '1999-05-10',
+        location: 'BRASIL',
+        playerType: 'EXPERIENT',
+        archetype: 'EXPLORER',
+      });
       expect(body.user.player).toMatchObject({ location: 'BRASIL', playerType: 'EXPERIENT', archetype: 'EXPLORER', birthDate: '1999-05-10' });
     });
 
     it('recusa senha curta', () =>
       api()
         .post('/api/auth/register')
-        .send({ role: 'PLAYER', name: 'Curto', email: `curto-${Date.now()}@e2e.orbitplay.com`, password: '1234567' })
+        .send({ role: 'PLAYER', name: 'Curto', email: `curto-${Date.now()}@e2e.orbitplay.com`, password: '1234567', acceptTerms: true })
         .expect(400));
+
+    describe('Verificação do e-mail (Figma "Verifique seu e-mail")', () => {
+      const SENHA = 'Orbit#Teste-2026';
+      const novoEmail = (prefixo: string) => `${prefixo}-${Date.now()}@e2e.orbitplay.com`;
+      const criar = (email: string, extra: Record<string, unknown> = {}) =>
+        api().post('/api/auth/register').send({ role: 'PLAYER', name: 'Verifica', email, password: SENHA, acceptTerms: true, ...extra });
+
+      it('sem aceitar os Termos de Uso não há conta', async () => {
+        const email = novoEmail('sem-termos');
+        const { body } = await api().post('/api/auth/register').send({ role: 'PLAYER', name: 'Sem termos', email, password: SENHA }).expect(400);
+        expect(body.fields).toHaveProperty('acceptTerms');
+        expect(await app.get(PrismaService).user.findUnique({ where: { email } })).toBeNull();
+      });
+
+      it('o cadastro não entra: devolve só o e-mail e a conta fica pendente', async () => {
+        const email = novoEmail('pendente');
+        const { body } = await criar(email).expect(201);
+        expect(body).toEqual({ email });
+        const user = await app.get(PrismaService).user.findUniqueOrThrow({ where: { email } });
+        expect(user.status).toBe('PENDING');
+        expect(user.termsAcceptedAt).not.toBeNull();
+      });
+
+      it('o opt-in de novidades começa desligado e grava o que a pessoa marcou', async () => {
+        const [sem, com] = [novoEmail('sem-opt'), novoEmail('com-opt')];
+        await criar(sem).expect(201);
+        await criar(com, { marketingOptIn: true }).expect(201);
+        const prisma = app.get(PrismaService);
+        expect((await prisma.user.findUniqueOrThrow({ where: { email: sem } })).marketingOptIn).toBe(false);
+        expect((await prisma.user.findUniqueOrThrow({ where: { email: com } })).marketingOptIn).toBe(true);
+      });
+
+      it('código errado não entra; o certo ativa a conta e devolve a sessão', async () => {
+        const email = novoEmail('codigo');
+        const espiao = espiarEmails(app);
+        await criar(email).expect(201);
+        const code = ultimoCodigo(espiao, email);
+        espiao.mockRestore();
+
+        const errado = code === '000000' ? '111111' : '000000';
+        const recusa = await api().post('/api/auth/verify-email').send({ email, code: errado }).expect(400);
+        expect(recusa.body.code).toBe('INVALID_VERIFICATION_CODE');
+
+        const { body } = await api().post('/api/auth/verify-email').send({ email, code }).expect(200);
+        expect(body.token).toEqual(expect.any(String));
+        expect(body.user).toMatchObject({ email, role: 'PLAYER', status: 'ACTIVE' });
+        // Usado uma vez, o código não vale de novo.
+        await api().post('/api/auth/verify-email').send({ email, code }).expect(400);
+      });
+
+      it('código vencido não vale', async () => {
+        const email = novoEmail('vencido');
+        const espiao = espiarEmails(app);
+        await criar(email).expect(201);
+        const code = ultimoCodigo(espiao, email);
+        espiao.mockRestore();
+        const prisma = app.get(PrismaService);
+        const { id } = await prisma.user.findUniqueOrThrow({ where: { email } });
+        await prisma.emailVerification.update({ where: { userId: id }, data: { expiresAt: new Date(Date.now() - 1000) } });
+
+        await api().post('/api/auth/verify-email').send({ email, code }).expect(400);
+      });
+
+      it('depois de 5 erros nem o código certo vale, e o reenvio gera outro que vale', async () => {
+        const email = novoEmail('tentativas');
+        const espiao = espiarEmails(app);
+        await criar(email).expect(201);
+        const code = ultimoCodigo(espiao, email);
+        const errado = code === '000000' ? '111111' : '000000';
+        for (let i = 0; i < 5; i++) await api().post('/api/auth/verify-email').send({ email, code: errado }).expect(400);
+        await api().post('/api/auth/verify-email').send({ email, code }).expect(400);
+
+        await api().post('/api/auth/resend-code').send({ email }).expect(200);
+        const novo = ultimoCodigo(espiao, email);
+        espiao.mockRestore();
+        await api().post('/api/auth/verify-email').send({ email, code: novo }).expect(200);
+      });
+
+      it('se o e-mail falha no cadastro, a conta fica pendente e o reenvio resolve', async () => {
+        const email = novoEmail('falha-email');
+        const espiao = espiarEmails(app);
+        espiao.mockRejectedValueOnce(new Error('SMTP fora do ar'));
+        const { body } = await criar(email).expect(201);
+        expect(body).toEqual({ email });
+
+        await api().post('/api/auth/resend-code').send({ email }).expect(200);
+        const code = ultimoCodigo(espiao, email);
+        espiao.mockRestore();
+        await api().post('/api/auth/verify-email').send({ email, code }).expect(200);
+      });
+
+      it('reenviar responde igual com ou sem cadastro pendente', async () => {
+        const espiao = espiarEmails(app);
+        const ninguem = await api().post('/api/auth/resend-code').send({ email: 'ninguem@e2e.orbitplay.com' }).expect(200);
+        const ativo = await api().post('/api/auth/resend-code').send({ email: 'player@orbitplay.com' }).expect(200);
+        expect(espiao).not.toHaveBeenCalled();
+        espiao.mockRestore();
+        expect(ninguem.body.message).toMatch(/Se houver um código/);
+        expect(ativo.body.message).toBe(ninguem.body.message.replace('ninguem@e2e.orbitplay.com', 'player@orbitplay.com'));
+      });
+
+      it('login antes de verificar responde EMAIL_NOT_VERIFIED e manda um código novo', async () => {
+        const email = novoEmail('login-pendente');
+        const espiao = espiarEmails(app);
+        await criar(email).expect(201);
+        const primeiro = ultimoCodigo(espiao, email);
+        espiao.mockClear();
+
+        const { body } = await api().post('/api/auth/login').send({ email, password: SENHA, role: 'PLAYER' }).expect(403);
+        expect(body.code).toBe('EMAIL_NOT_VERIFIED');
+        const segundo = ultimoCodigo(espiao, email);
+        espiao.mockRestore();
+
+        // O código novo substitui o anterior.
+        if (primeiro !== segundo) await api().post('/api/auth/verify-email').send({ email, code: primeiro }).expect(400);
+        await api().post('/api/auth/verify-email').send({ email, code: segundo }).expect(200);
+      });
+
+      describe('Minha conta e MFA por e-mail', () => {
+        const auth = (token: string) => ({ Authorization: `Bearer ${token}` });
+
+        it('a Minha conta do jogador grava nascimento e país no perfil de elegibilidade', async () => {
+          const conta = await cadastrar(app, { role: 'PLAYER', name: 'Conta', email: novoEmail('conta'), password: SENHA, birthDate: '2000-01-01', location: 'BRASIL' });
+          const { body } = await api()
+            .patch('/api/me')
+            .set(auth(conta.token))
+            .send({ name: 'Conta Nova', birthDate: '1995-03-20', location: 'EUA', emailNotifications: false })
+            .expect(200);
+          expect(body).toMatchObject({ name: 'Conta Nova', emailNotifications: false, mfaEnabled: false });
+          expect(body.player).toMatchObject({ birthDate: '1995-03-20', location: 'EUA' });
+        });
+
+        it('o estúdio MANAGE muda cargo, nome e site do estúdio; site vazio apaga', async () => {
+          const conta = await cadastrar(app, { role: 'STUDIO', name: 'Gestora', email: novoEmail('gestora'), password: SENHA, organization: 'Antigo', website: 'https://antigo.dev', birthDate: '1990-01-01', location: 'BRASIL' });
+          expect(conta.user.studio).toMatchObject({ birthDate: '1990-01-01', location: 'BRASIL' });
+          const { body } = await api()
+            .patch('/api/me')
+            .set(auth(conta.token))
+            .send({ jobTitle: 'Produtora', organization: 'Novo Nome', website: '' })
+            .expect(200);
+          expect(body.studio).toMatchObject({ jobTitle: 'Produtora', organization: 'Novo Nome' });
+          expect(body.studio.website).toBeUndefined();
+        });
+
+        it('sem MANAGE, nome e site do estúdio respondem 403 e nada muda', async () => {
+          const marina = await login('marina-lopes@estudio.orbitplay.com', 'STUDIO');
+          const { body } = await api().patch('/api/me').set(auth(marina)).send({ organization: 'Tomado' }).expect(403);
+          expect(body.code).toBe('TEAM_PERMISSION');
+          const jogadorTenta = await api().patch('/api/me').set(auth(jogador)).send({ website: 'https://x.dev' }).expect(403);
+          expect(jogadorTenta.body.code).toBe('TEAM_PERMISSION');
+        });
+
+        it('com MFA ligado o login devolve o desafio e só entra com o código', async () => {
+          const email = novoEmail('mfa');
+          const conta = await cadastrar(app, { role: 'PLAYER', name: 'MFA', email, password: SENHA });
+          await api().patch('/api/me').set(auth(conta.token)).send({ mfaEnabled: true }).expect(200);
+
+          const espiao = espiarEmails(app);
+          const { body } = await api().post('/api/auth/login').send({ email, password: SENHA, role: 'PLAYER', remember: true }).expect(200);
+          expect(body).toEqual({ mfaRequired: true, email });
+          const code = ultimoCodigo(espiao, email);
+          espiao.mockRestore();
+
+          // O código do login não confirma cadastro, e o errado não entra.
+          await api().post('/api/auth/verify-email').send({ email, code }).expect(400);
+          const errado = code === '000000' ? '111111' : '000000';
+          await api().post('/api/auth/verify-login').send({ email, code: errado }).expect(400);
+
+          const sessao = await api().post('/api/auth/verify-login').send({ email, code, remember: true }).expect(200);
+          expect(sessao.body.user).toMatchObject({ email, mfaEnabled: true });
+          await api().get('/api/auth/me').set(auth(sessao.body.token)).expect(200);
+        });
+
+        it('no login com MFA, reenviar troca o código; com a senha errada nenhum código sai', async () => {
+          const email = novoEmail('mfa-reenvio');
+          const conta = await cadastrar(app, { role: 'PLAYER', name: 'MFA 2', email, password: SENHA });
+          await api().patch('/api/me').set(auth(conta.token)).send({ mfaEnabled: true }).expect(200);
+
+          const espiao = espiarEmails(app);
+          await api().post('/api/auth/login').send({ email, password: 'Errada#2026', role: 'PLAYER' }).expect(401);
+          expect(espiao).not.toHaveBeenCalled();
+
+          await api().post('/api/auth/login').send({ email, password: SENHA, role: 'PLAYER' }).expect(200);
+          await api().post('/api/auth/resend-code').send({ email }).expect(200);
+          const novo = ultimoCodigo(espiao, email);
+          espiao.mockRestore();
+          await api().post('/api/auth/verify-login').send({ email, code: novo }).expect(200);
+        });
+
+        it('sem MFA o login segue devolvendo a sessão direto', async () => {
+          const { body } = await api().post('/api/auth/login').send({ email: 'player@orbitplay.com', password: '123456', role: 'PLAYER' }).expect(200);
+          expect(body.token).toEqual(expect.any(String));
+          expect(body.mfaRequired).toBeUndefined();
+        });
+      });
+
+      it('login com senha errada de cadastro pendente não revela nada nem manda código', async () => {
+        const email = novoEmail('login-errado');
+        await criar(email).expect(201);
+        const espiao = espiarEmails(app);
+        const { body } = await api().post('/api/auth/login').send({ email, password: 'Errada#2026', role: 'PLAYER' }).expect(401);
+        expect(body.code).toBe('INVALID_CREDENTIALS');
+        expect(espiao).not.toHaveBeenCalled();
+        espiao.mockRestore();
+      });
+    });
 
     it('senha atual errada responde 400 e não derruba a sessão', async () => {
       const { body } = await api()
@@ -749,11 +947,8 @@ describe('OrbitPlay API (e2e)', () => {
     });
 
     it('o tester começa e baixa a build de verdade (com Range)', async () => {
-      const conta = await api()
-        .post('/api/auth/register')
-        .send({ role: 'PLAYER', name: 'Tester do fluxo', email: `fluxo-${Date.now()}@teste.orbitplay.com`, password: 'Orbit#Teste-2026', birthDate: '2000-01-01', location: 'BRASIL' })
-        .expect(201);
-      tester = conta.body.token;
+      const conta = await cadastrar(app, { role: 'PLAYER', name: 'Tester do fluxo', email: `fluxo-${Date.now()}@teste.orbitplay.com`, password: 'Orbit#Teste-2026', birthDate: '2000-01-01', location: 'BRASIL' });
+      tester = conta.token;
 
       const inicio = await api().post(`/api/player/tests/${testId}/start`).set('Authorization', `Bearer ${tester}`).expect(201);
       participationId = inicio.body.id;

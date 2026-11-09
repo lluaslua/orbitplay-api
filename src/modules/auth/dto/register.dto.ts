@@ -1,4 +1,6 @@
 import {
+  Equals,
+  IsBoolean,
   IsEmail,
   IsIn,
   IsISO8601,
@@ -72,4 +74,11 @@ export class RegisterDto implements RegisterPayload {
   @IsOptional()
   @IsIn(ARCHETYPE_IDS)
   archetype?: ArchetypeId;
+
+  @Equals(true, { message: 'Aceite os Termos de Uso e a Política de Privacidade.' })
+  acceptTerms: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  marketingOptIn?: boolean;
 }

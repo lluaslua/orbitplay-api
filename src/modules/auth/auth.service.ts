@@ -8,22 +8,31 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { UserRole } from '@prisma/client';
-import { createHash, randomBytes } from 'node:crypto';
+import { createHash, randomBytes, randomInt } from 'node:crypto';
 import { RateLimitStore, tooManyRequests } from '../../common/security/rate-limit.guard';
 import { SecurityLogService } from '../../common/security/security-log.service';
 import { TokenService } from '../../common/security/token.service';
-import { RESET_TOKEN_TTL_MINUTES } from '../../common/constants/domain.constants';
+import {
+  EMAIL_CODE_MAX_ATTEMPTS,
+  EMAIL_CODE_TTL_MINUTES,
+  RESET_TOKEN_TTL_MINUTES,
+} from '../../common/constants/domain.constants';
 import { ErrorCode } from '../../common/constants/error-codes';
 import type { JwtPayload, RequestUser } from '../../common/interfaces/jwt-payload.interface';
 import { MailService } from '../../common/mail/mail.service';
-import type { AuthSession, AuthUser } from '../../contracts';
+import type { AuthSession, AuthUser, LoginResult, RegisterResult } from '../../contracts';
 import { PrismaService } from '../../prisma/prisma.service';
 import { hashPassword, needsRehash, verifyPassword } from '../users/password';
 import { normalizeEmail, UsersService } from '../users/users.service';
 import type { LoginDto } from './dto/login.dto';
 import type { RecoverPasswordDto } from './dto/recover-password.dto';
 import type { RegisterDto } from './dto/register.dto';
+import type { ResendCodeDto } from './dto/resend-code.dto';
 import type { ResetPasswordDto } from './dto/reset-password.dto';
+import type { VerifyEmailDto, VerifyLoginDto } from './dto/verify-email.dto';
+
+/** Para que serve o código aberto: confirmar o cadastro ou o login com MFA. */
+type CodePurpose = 'SIGNUP' | 'LOGIN';
 
 @Injectable()
 export class AuthService {
@@ -42,7 +51,7 @@ export class AuthService {
    * RN-02). A aba escolhida não dá papel a ninguém: a sessão sai com o papel
    * da conta, e estúdio/jogador na aba errada é recusado (RN-03).
    */
-  async login({ email, password, role, remember }: LoginDto, ip = 'desconhecido'): Promise<AuthSession> {
+  async login({ email, password, role, remember }: LoginDto, ip = 'desconhecido'): Promise<LoginResult> {
     const maxFalhas = this.config.getOrThrow<number>('security.loginMaxFailures');
     const bloqueioMin = this.config.getOrThrow<number>('security.loginLockMinutes');
     const emailRef = SecurityLogService.emailRef(email);
@@ -70,6 +79,15 @@ export class AuthService {
     if (user.status === 'INACTIVE') {
       throw new ForbiddenException({ message: 'Esta conta está desativada.', code: ErrorCode.ACCOUNT_INACTIVE });
     }
+    if (user.status === 'PENDING' && (await this.hasOpenVerification(user.id))) {
+      // A senha confere, então é o dono do cadastro: um código novo e o app abre "Verifique seu e-mail".
+      this.limits.clear(chave);
+      await this.issueEmailCode(user.id, user.email, 'SIGNUP');
+      throw new ForbiddenException({
+        message: 'Confirme seu e-mail para entrar. Enviamos um novo código.',
+        code: ErrorCode.EMAIL_NOT_VERIFIED,
+      });
+    }
     if (user.status === 'PENDING') {
       throw new ForbiddenException({
         message: 'Defina sua senha pelo link do convite antes de entrar.',
@@ -87,15 +105,31 @@ export class AuthService {
 
     this.limits.clear(chave);
     // "Último acesso" da tabela de Gerenciamento de acessos; acerto zera as falhas e, se o hash é antigo, refaz.
+    // Com MFA, o último acesso só conta quando o código confere (`verifyLogin`).
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
-        lastLoginAt: new Date(),
+        lastLoginAt: user.mfaEnabled ? undefined : new Date(),
         failedLoginCount: 0,
         lockedUntil: null,
         ...(needsRehash(user.passwordHash) ? { passwordHash: await hashPassword(password) } : {}),
       },
     });
+
+    if (user.mfaEnabled) {
+      await this.issueEmailCode(user.id, user.email, 'LOGIN');
+      return { mfaRequired: true, email: user.email };
+    }
+    return this.issueSession(user.id, user.role, remember ?? false);
+  }
+
+  /** Segundo passo do login com "MFA por E-mail". */
+  async verifyLogin({ email, code, remember }: VerifyLoginDto): Promise<AuthSession> {
+    const user = await this.consumeCode(email, code, 'LOGIN');
+    if (user.status !== 'ACTIVE') {
+      throw new ForbiddenException({ message: 'Esta conta está desativada.', code: ErrorCode.ACCOUNT_INACTIVE });
+    }
+    await this.prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
     return this.issueSession(user.id, user.role, remember ?? false);
   }
 
@@ -134,8 +168,11 @@ export class AuthService {
     return conta;
   }
 
-  /** "Criar nova conta": estúdio nasce com a organização e permissão de gestão (Tela 01, RN-05). */
-  async register(dto: RegisterDto): Promise<AuthSession> {
+  /**
+   * "Criar conta": estúdio nasce com a organização e permissão de gestão (Tela 01, RN-05).
+   * A conta nasce PENDING e só entra depois do código do e-mail (`verifyEmail`).
+   */
+  async register(dto: RegisterDto): Promise<RegisterResult> {
     const email = normalizeEmail(dto.email);
     if (await this.prisma.user.findUnique({ where: { email }, select: { id: true } })) {
       throw new ConflictException({
@@ -146,6 +183,11 @@ export class AuthService {
     }
 
     const passwordHash = await hashPassword(dto.password);
+    const conta = {
+      status: 'PENDING' as const,
+      termsAcceptedAt: new Date(),
+      marketingOptIn: dto.marketingOptIn ?? false,
+    };
     const user = await this.prisma.$transaction(async (tx) => {
       if (dto.role === 'STUDIO') {
         const studio = await tx.studio.create({
@@ -159,7 +201,9 @@ export class AuthService {
             role: 'STUDIO',
             studioId: studio.id,
             studioPermission: 'MANAGE',
-            lastLoginAt: new Date(),
+            birthDate: dto.birthDate ? new Date(dto.birthDate) : undefined,
+            location: dto.location,
+            ...conta,
           },
         });
       }
@@ -170,7 +214,7 @@ export class AuthService {
           email,
           passwordHash,
           role: 'PLAYER',
-          lastLoginAt: new Date(),
+          ...conta,
           player: {
             create: {
               birthDate: dto.birthDate ? new Date(dto.birthDate) : undefined,
@@ -183,7 +227,95 @@ export class AuthService {
       });
     });
 
+    // A conta já existe: se o e-mail falhar, a pessoa segue para "Verifique seu e-mail" e usa
+    // "Reenviar código". Responder erro aqui faria a nova tentativa de cadastro dar EMAIL_TAKEN.
+    await this.issueEmailCode(user.id, user.email, 'SIGNUP').catch(() =>
+      this.log.event('signup_mail_failed', { userId: user.id }),
+    );
+    return { email: user.email };
+  }
+
+  /** "Verificar e-mail": o código certo e dentro do prazo ativa a conta e já entra. */
+  async verifyEmail({ email, code }: VerifyEmailDto): Promise<AuthSession> {
+    const user = await this.consumeCode(email, code, 'SIGNUP');
+    await this.prisma.user.update({ where: { id: user.id }, data: { status: 'ACTIVE', lastLoginAt: new Date() } });
     return this.issueSession(user.id, user.role, false);
+  }
+
+  /**
+   * "Reenviar código", do cadastro ou do login com MFA. A resposta é a mesma
+   * com ou sem código aberto, para não revelar e-mails.
+   */
+  async resendCode({ email }: ResendCodeDto): Promise<{ message: string }> {
+    const user = await this.users.findByEmail(email);
+    const aberto = user
+      ? await this.prisma.emailVerification.findUnique({ where: { userId: user.id }, select: { purpose: true } })
+      : null;
+    const valeAinda =
+      (aberto?.purpose === 'SIGNUP' && user?.status === 'PENDING') ||
+      (aberto?.purpose === 'LOGIN' && user?.status === 'ACTIVE');
+    if (user && aberto && valeAinda) {
+      await this.issueEmailCode(user.id, user.email, aberto.purpose as CodePurpose);
+    }
+    return { message: `Se houver um código aguardando confirmação para ${email}, enviamos um novo.` };
+  }
+
+  private async hasOpenVerification(userId: string): Promise<boolean> {
+    return !!(await this.prisma.emailVerification.findFirst({ where: { userId, purpose: 'SIGNUP' }, select: { userId: true } }));
+  }
+
+  /**
+   * Confere o código de 6 dígitos e o consome. Errado conta tentativa; vencido,
+   * sem tentativas ou de outro propósito recebe a mesma resposta.
+   */
+  private async consumeCode(email: string, code: string, purpose: CodePurpose) {
+    const user = await this.users.findByEmail(email);
+    const registro = user
+      ? await this.prisma.emailVerification.findUnique({ where: { userId: user.id } })
+      : null;
+    const invalido = new BadRequestException({
+      message: 'Código inválido ou expirado. Confira o e-mail ou peça um novo código.',
+      code: ErrorCode.INVALID_VERIFICATION_CODE,
+      fields: { code: 'Código inválido ou expirado.' },
+    });
+
+    if (
+      !user ||
+      !registro ||
+      registro.purpose !== purpose ||
+      registro.expiresAt < new Date() ||
+      registro.attempts >= EMAIL_CODE_MAX_ATTEMPTS
+    ) {
+      throw invalido;
+    }
+    if (registro.codeHash !== hashToken(code)) {
+      await this.prisma.emailVerification.update({
+        where: { userId: user.id },
+        data: { attempts: { increment: 1 } },
+      });
+      this.log.event('email_code_failed', { userId: user.id, purpose });
+      throw invalido;
+    }
+
+    await this.prisma.emailVerification.delete({ where: { userId: user.id } });
+    return user;
+  }
+
+  /** Gera o código de 6 dígitos (o novo substitui o anterior) e manda por e-mail. */
+  private async issueEmailCode(userId: string, email: string, purpose: CodePurpose): Promise<void> {
+    const code = randomInt(0, 1_000_000).toString().padStart(6, '0');
+    const dados = {
+      purpose,
+      codeHash: hashToken(code),
+      expiresAt: new Date(Date.now() + EMAIL_CODE_TTL_MINUTES * 60_000),
+      attempts: 0,
+    };
+    await this.prisma.emailVerification.upsert({ where: { userId }, create: { userId, ...dados }, update: dados });
+    await this.mail.send(
+      email,
+      'Seu código de verificação do OrbitPlay',
+      `Seu código é ${code}. Ele expira em ${EMAIL_CODE_TTL_MINUTES} minutos.`,
+    );
   }
 
   /**
