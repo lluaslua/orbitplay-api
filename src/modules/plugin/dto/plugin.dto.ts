@@ -10,6 +10,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  Max,
   MaxLength,
   Min,
   ValidateNested,
@@ -86,13 +87,13 @@ export class PluginConfigDto {
 }
 
 export class TelemetryEventDto implements TelemetryEventInput {
-  @IsInt() @Min(0) atSecond: number;
+  @IsInt() @Min(0) @Max(86_400) atSecond: number;
   @IsIn(['TRIGGER', 'POSITION', 'DEATH']) type: 'TRIGGER' | 'POSITION' | 'DEATH';
   @IsString() @IsNotEmpty() @MaxLength(120) label: string;
-  @IsOptional() @IsNumber() value?: number;
-  @IsOptional() @IsNumber() x?: number;
-  @IsOptional() @IsNumber() y?: number;
-  @IsOptional() @IsNumber() z?: number;
+  @IsOptional() @IsNumber() @Min(-1e12) @Max(1e12) value?: number;
+  @IsOptional() @IsNumber() @Min(-1e7) @Max(1e7) x?: number;
+  @IsOptional() @IsNumber() @Min(-1e7) @Max(1e7) y?: number;
+  @IsOptional() @IsNumber() @Min(-1e7) @Max(1e7) z?: number;
   @IsOptional() @IsIn(DEATH_CAUSES) cause?: DeathCauseTracking;
   @IsOptional() @IsString() @MaxLength(500) detail?: string;
 }

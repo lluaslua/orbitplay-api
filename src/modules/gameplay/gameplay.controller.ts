@@ -14,6 +14,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import type { RequestUser } from '../../common/interfaces/jwt-payload.interface';
+import { RateLimit } from '../../common/security/rate-limit.guard';
 import { VIDEO_MAX_BYTES, videoFilter } from '../../common/storage/upload-filters';
 import { ConsentDto } from './dto/consent.dto';
 import { EventsDto } from './dto/events.dto';
@@ -32,18 +33,21 @@ export class GameplayController {
     return this.gameplay.consent(user, id, dto);
   }
 
+  @RateLimit({ limit: 120, windowMs: 60_000, by: 'user' })
   @Patch('progress')
   progress(@CurrentUser() user: RequestUser, @Param('id') id: string, @Body() dto: ProgressDto): Promise<{ progress: number }> {
     return this.gameplay.progress(user, id, dto.progress);
   }
 
   /** Em lote: o app e o plug-in acumulam e mandam de tempos em tempos. */
+  @RateLimit({ limit: 60, windowMs: 60_000, by: 'user' })
   @Post('events')
   events(@CurrentUser() user: RequestUser, @Param('id') id: string, @Body() dto: EventsDto): Promise<{ received: number }> {
     return this.gameplay.events(user, id, dto.events);
   }
 
   /** Multipart com o vídeo no campo `file`. */
+  @RateLimit({ limit: 10, windowMs: 3_600_000, by: 'user' })
   @Post('recording')
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: VIDEO_MAX_BYTES }, fileFilter: videoFilter }))
   recording(

@@ -1,7 +1,7 @@
 node_modules
 dist
 # Builds, gravações e imagens enviadas (só a pasta na raiz, não src/common/storage)
-/storage
+/storage/
 coverage
 *.log
 *.tsbuildinfo

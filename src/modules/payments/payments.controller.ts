@@ -1,4 +1,6 @@
-import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Param, Post, Req } from '@nestjs/common';
+import type { Request } from 'express';
+import { RateLimit } from '../../common/security/rate-limit.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -16,6 +18,7 @@ export class PaymentsController {
   /** "Finalizar" da etapa 4. Pagar é da gestão do estúdio. */
   @Roles('STUDIO')
   @RequireStudioPermission('MANAGE')
+  @RateLimit({ limit: 10, windowMs: 60_000, by: 'user' })
   @Idempotent()
   @Post('tests/:testId/checkout')
   checkout(@CurrentUser() user: RequestUser, @Param('testId') testId: string, @Body() dto: CheckoutDto): Promise<PaymentOrder> {
@@ -42,13 +45,15 @@ export class PaymentsController {
 
   /** Chamado pelo provedor, sem token: quem autentica é a assinatura, conferida pelo gateway. */
   @Public()
+  @RateLimit({ limit: 120, windowMs: 60_000 })
   @Post('payments/webhooks/:provider')
   @HttpCode(HttpStatus.OK)
   webhook(
     @Param('provider') provider: string,
     @Headers() headers: Record<string, string | string[] | undefined>,
     @Body() body: unknown,
+    @Req() request: Request & { rawBody?: Buffer },
   ): Promise<{ received: true }> {
-    return this.payments.webhook(provider, headers, body);
+    return this.payments.webhook(provider, headers, body, request.rawBody);
   }
 }

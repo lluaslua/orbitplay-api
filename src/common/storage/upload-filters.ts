@@ -1,56 +1,94 @@
 import { BadRequestException } from '@nestjs/common';
+import { open } from 'node:fs/promises';
 import { basename, extname } from 'node:path';
-import type { Request } from 'express';
+import { ErrorCode } from '../constants/error-codes';
 
-/** Extensão que o nome do arquivo ganha a partir do mimetype, já com o ponto. */
+/** Tipos aceitos e a extensão com que cada um é gravado. A extensão vem daqui, nunca do nome enviado. */
 export const IMAGE_TYPES: Record<string, string> = {
-  'image/png': '.png',
   'image/jpeg': '.jpg',
-  'image/jpg': '.jpg',
+  'image/png': '.png',
   'image/webp': '.webp',
-  'image/gif': '.gif',
 };
 
 export const VIDEO_TYPES: Record<string, string> = {
   'video/webm': '.webm',
   'video/mp4': '.mp4',
-  'video/quicktime': '.mov',
 };
 
-/** O comentário do bootstrap limita cada imagem a 5 MB. */
-export const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+/** Extensões de build aceitas (`.unity`/`.unreal` são os projetos de engine que `platformsOf` já conhece). */
+export const BUILD_EXTENSIONS = ['.zip', '.exe', '.apk', '.dmg', '.unity', '.unreal'] as const;
 
-/** Gravação da sessão. O limite da build vem do .env; o vídeo fica à parte. */
+export const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 export const VIDEO_MAX_BYTES = 500 * 1024 * 1024;
 
-const EXTENSOES_DE_BUILD = new Set(['.zip', '.exe', '.dmg', '.apk', '.7z', '.unity', '.unreal']);
+type Callback = (error: Error | null, aceitar: boolean) => void;
+type Arquivo = Pick<Express.Multer.File, 'mimetype' | 'originalname'>;
 
-type FileFilter = (req: Request, file: Express.Multer.File, cb: (error: Error | null, accept: boolean) => void) => void;
-
-function aceitar(permitido: boolean, mensagem: string): FileFilter {
-  return (_req, _file, cb) => {
-    if (permitido) cb(null, true);
-    else cb(new BadRequestException({ message: mensagem }), false);
-  };
+function recusar(callback: Callback, message: string) {
+  callback(new BadRequestException({ message, code: ErrorCode.INVALID_FILE_TYPE }), false);
 }
 
-export const imageFilter: FileFilter = (req, file, cb) =>
-  aceitar(file.mimetype in IMAGE_TYPES, 'Envie uma imagem PNG, JPG, WEBP ou GIF.')(req, file, cb);
+/** `multer` entrega o nome em latin1; isto devolve o UTF-8 e tira qualquer caminho. */
+export function originalName(file: Pick<Express.Multer.File, 'originalname'>): string {
+  const nome = Buffer.from(file.originalname, 'latin1').toString('utf8');
+  return basename(nome.replace(/\\/g, '/')).replace(/^\.+/, '') || 'arquivo';
+}
 
-export const videoFilter: FileFilter = (req, file, cb) =>
-  aceitar(file.mimetype in VIDEO_TYPES, 'Envie a gravação em WEBM, MP4 ou MOV.')(req, file, cb);
+export function imageFilter(_req: unknown, file: Arquivo, callback: Callback): void {
+  if (file.mimetype in IMAGE_TYPES) callback(null, true);
+  else recusar(callback, 'Envie uma imagem JPG, PNG ou WebP.');
+}
 
-export const buildFilter: FileFilter = (req, file, cb) =>
-  aceitar(
-    EXTENSOES_DE_BUILD.has(extname(originalName(file)).toLowerCase()),
-    'Envie a build em .zip, .exe, .dmg ou .apk.',
-  )(req, file, cb);
+export function videoFilter(_req: unknown, file: Arquivo, callback: Callback): void {
+  if (file.mimetype in VIDEO_TYPES) callback(null, true);
+  else recusar(callback, 'Envie a gravação em WebM ou MP4.');
+}
+
+export function buildFilter(_req: unknown, file: Arquivo, callback: Callback): void {
+  const extensao = extname(originalName(file)).toLowerCase();
+  if ((BUILD_EXTENSIONS as readonly string[]).includes(extensao)) callback(null, true);
+  else recusar(callback, `Envie a build em ${BUILD_EXTENSIONS.join(', ')}.`);
+}
 
 /**
- * Nome original do arquivo. O multer entrega o nome em latin1; sem essa
- * conversão, acento vira lixo antes de ir para o banco.
+ * Conferência do conteúdo pelos primeiros bytes. O `Content-Type` e o nome
+ * vêm do cliente e mentem à vontade; a assinatura do arquivo, não.
+ * Extensão sem assinatura conhecida (`.dmg`, `.unity`, `.unreal`) não é barrada aqui.
  */
-export function originalName(file: Express.Multer.File): string {
-  const nome = Buffer.from(file.originalname, 'latin1').toString('utf8');
-  return basename(nome);
+export async function matchesSignature(path: string, extensao: string): Promise<boolean> {
+  const alvo = extensao.toLowerCase();
+  const handle = await open(path, 'r');
+  try {
+    const cabeca = Buffer.alloc(16);
+    const { bytesRead } = await handle.read(cabeca, 0, 16, 0);
+    return assinaturaConfere(cabeca.subarray(0, bytesRead), alvo);
+  } finally {
+    await handle.close();
+  }
+}
+
+export function assinaturaConfere(cabeca: Buffer, extensao: string): boolean {
+  const comeca = (bytes: number[], deslocamento = 0) =>
+    cabeca.length >= deslocamento + bytes.length && bytes.every((b, i) => cabeca[deslocamento + i] === b);
+
+  switch (extensao) {
+    case '.png':
+      return comeca([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    case '.jpg':
+    case '.jpeg':
+      return comeca([0xff, 0xd8, 0xff]);
+    case '.webp':
+      return comeca([0x52, 0x49, 0x46, 0x46]) && comeca([0x57, 0x45, 0x42, 0x50], 8);
+    case '.webm':
+      return comeca([0x1a, 0x45, 0xdf, 0xa3]);
+    case '.mp4':
+      return comeca([0x66, 0x74, 0x79, 0x70], 4);
+    case '.zip':
+    case '.apk':
+      return comeca([0x50, 0x4b]);
+    case '.exe':
+      return comeca([0x4d, 0x5a]);
+    default:
+      return true;
+  }
 }

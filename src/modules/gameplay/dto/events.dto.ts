@@ -8,6 +8,7 @@ import {
   IsObject,
   IsOptional,
   IsString,
+  Max,
   MaxLength,
   Min,
   ValidateNested,
@@ -18,6 +19,7 @@ import type { SessionEventInput, SessionEventType } from '../../../contracts';
 export class SessionEventDto implements SessionEventInput {
   @IsInt()
   @Min(0)
+  @Max(86_400)
   atSecond: number;
 
   @IsIn(SESSION_EVENT_TYPES)

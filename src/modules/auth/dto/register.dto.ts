@@ -10,6 +10,7 @@ import {
   MinLength,
   ValidateIf,
 } from 'class-validator';
+import { IsStrongPassword } from '../../../common/security/password-policy';
 import {
   ARCHETYPE_IDS,
   LOGIN_TABS,
@@ -36,10 +37,9 @@ export class RegisterDto implements RegisterPayload {
   @IsEmail({}, { message: 'Informe um e-mail válido.' })
   email: string;
 
-  /** O bcrypt só considera os primeiros 72 bytes. */
+  /** Regra única de senha nova (`password-policy.ts`): 8 a 72 bytes, letras e números, sem senhas comuns. */
   @IsString()
-  @MinLength(8, { message: 'A senha precisa de pelo menos 8 caracteres.' })
-  @MaxLength(72)
+  @IsStrongPassword()
   password: string;
 
   @ValidateIf((dto: RegisterDto) => dto.role === 'STUDIO')

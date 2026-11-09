@@ -2,8 +2,8 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
-import { ApiExceptionFilter } from '../src/common/filters/api-exception.filter';
-import { createValidationPipe } from '../src/common/pipes/validation.pipe';
+import { configureApp } from '../src/app.setup';
+import { PrismaService } from '../src/prisma/prisma.service';
 
 /**
  * Fluxos de ponta a ponta contra o banco do .env, depois de `npm run db:seed`.
@@ -24,12 +24,14 @@ describe('OrbitPlay API (e2e)', () => {
   let owner: string;
 
   beforeAll(async () => {
+    // Esta suíte dispara centenas de chamadas do mesmo IP: o limite de taxa é testado em security.e2e-spec.ts.
+    process.env.RATE_LIMIT_DISABLED = 'true';
     const modulo = await Test.createTestingModule({ imports: [AppModule] }).compile();
-    app = modulo.createNestApplication<NestExpressApplication>();
-    app.setGlobalPrefix('api');
-    app.useGlobalPipes(createValidationPipe());
-    app.useGlobalFilters(new ApiExceptionFilter());
+    app = modulo.createNestApplication<NestExpressApplication>({ bodyParser: false });
+    configureApp(app);
     await app.init();
+    // Os testes de credencial errada contam falhas na conta do seed; zera para a suíte ser repetível.
+    await app.get(PrismaService).user.updateMany({ data: { failedLoginCount: 0, lockedUntil: null } });
 
     [estudio, jogador, owner] = await Promise.all([
       login('studio@orbitplay.com', 'STUDIO'),
@@ -195,7 +197,13 @@ describe('OrbitPlay API (e2e)', () => {
       it('envia, e o segundo envio devolve o mesmo resultado', async () => {
         saldoAntes = (await api().get('/api/player/wallet').set('Authorization', `Bearer ${jogador}`).expect(200)).body.balanceCents;
 
-        const envio = { participationId, answers: { 'q-e2e-1': 'B' }, bugsReported: 1, durationSeconds: 300 };
+        // O bug informado precisa ter sido registrado como evento (a API não aceita o número solto do cliente).
+        await api()
+          .post(`/api/player/participations/${participationId}/events`)
+          .set('Authorization', `Bearer ${jogador}`)
+          .send({ events: [{ atSecond: 1, type: 'BUG', label: 'Travou na curva' }] })
+          .expect(201);
+        const envio = { participationId, answers: { 'q-e2e-1': 'B' }, bugsReported: 1, durationSeconds: 30 };
         const a = await api().post(`/api/player/tests/${testId}/submit`).set('Authorization', `Bearer ${jogador}`).send(envio).expect(201);
         const b = await api().post(`/api/player/tests/${testId}/submit`).set('Authorization', `Bearer ${jogador}`).send(envio).expect(201);
         expect(a.body.rewardStatus).toBe('PENDING');
@@ -418,7 +426,7 @@ describe('OrbitPlay API (e2e)', () => {
           role: 'PLAYER',
           name: 'Tester e2e',
           email: `e2e-${Date.now()}@teste.orbitplay.com`,
-          password: '12345678',
+          password: 'Orbit#Teste-2026',
           birthDate: '2000-01-01',
           location: 'BRASIL',
           playerType: 'CASUAL',
@@ -489,7 +497,7 @@ describe('OrbitPlay API (e2e)', () => {
     it('quem nunca jogou não entra', async () => {
       const { body: conta } = await api()
         .post('/api/auth/register')
-        .send({ role: 'PLAYER', name: 'Curioso', email: `curioso-${Date.now()}@teste.orbitplay.com`, password: '12345678' })
+        .send({ role: 'PLAYER', name: 'Curioso', email: `curioso-${Date.now()}@teste.orbitplay.com`, password: 'Orbit#Teste-2026' })
         .expect(201);
       const { body } = await api().get('/api/games/game-001/community').set('Authorization', `Bearer ${conta.token}`).expect(403);
       expect(body.code).toBe('COMMUNITY_RESTRICTED');
@@ -506,7 +514,7 @@ describe('OrbitPlay API (e2e)', () => {
       const email = `estudio-${Date.now()}@e2e.orbitplay.com`;
       const { body } = await api()
         .post('/api/auth/register')
-        .send({ role: 'STUDIO', name: 'Ana Dev', email, password: 'Senha@123', organization: 'Estúdio e2e', website: 'https://e2e.dev' })
+        .send({ role: 'STUDIO', name: 'Ana Dev', email, password: 'Orbit#Teste-2026', organization: 'Estúdio e2e', website: 'https://e2e.dev' })
         .expect(201);
       expect(body.user.role).toBe('STUDIO');
       expect(body.user.studio).toMatchObject({ organization: 'Estúdio e2e', permission: 'MANAGE' });
@@ -518,7 +526,7 @@ describe('OrbitPlay API (e2e)', () => {
 
       const repetido = await api()
         .post('/api/auth/register')
-        .send({ role: 'STUDIO', name: 'Ana Dev', email, password: 'Senha@123', organization: 'Outra' })
+        .send({ role: 'STUDIO', name: 'Ana Dev', email, password: 'Orbit#Teste-2026', organization: 'Outra' })
         .expect(409);
       expect(repetido.body.code).toBe('EMAIL_TAKEN');
     });
@@ -530,7 +538,7 @@ describe('OrbitPlay API (e2e)', () => {
           role: 'PLAYER',
           name: 'Bia Tester',
           email: `tester-${Date.now()}@e2e.orbitplay.com`,
-          password: 'Senha@123',
+          password: 'Orbit#Teste-2026',
           birthDate: '1999-05-10',
           location: 'BRASIL',
           playerType: 'EXPERIENT',
@@ -622,7 +630,7 @@ describe('OrbitPlay API (e2e)', () => {
       const { body } = await api()
         .post(`/api/games/${gameId}/builds`)
         .set('Authorization', `Bearer ${estudio}`)
-        .attach('file', Buffer.from('build de teste do e2e '.repeat(4096)), 'corrida-2.1.0.zip')
+        .attach('file', Buffer.concat([Buffer.from([0x50, 0x4b, 0x03, 0x04]), Buffer.from('build de teste do e2e '.repeat(4096))]), 'corrida-2.1.0.zip')
         .expect(201);
       buildId = body.id;
       expect(body).toMatchObject({ version: '2.1.0', status: 'PROCESSING' });
@@ -692,7 +700,7 @@ describe('OrbitPlay API (e2e)', () => {
     it('o tester começa e baixa a build de verdade (com Range)', async () => {
       const conta = await api()
         .post('/api/auth/register')
-        .send({ role: 'PLAYER', name: 'Tester do fluxo', email: `fluxo-${Date.now()}@teste.orbitplay.com`, password: 'Senha@123', birthDate: '2000-01-01', location: 'BRASIL' })
+        .send({ role: 'PLAYER', name: 'Tester do fluxo', email: `fluxo-${Date.now()}@teste.orbitplay.com`, password: 'Orbit#Teste-2026', birthDate: '2000-01-01', location: 'BRASIL' })
         .expect(201);
       tester = conta.body.token;
 
@@ -704,7 +712,7 @@ describe('OrbitPlay API (e2e)', () => {
       expect(info.body.sha256).toMatch(/^[a-f0-9]{64}$/);
 
       const arquivo = await api().get(`/api/player/tests/${testId}/build/file`).set('Authorization', `Bearer ${tester}`).buffer(true).expect(200);
-      expect(Number(arquivo.headers['content-length'])).toBe('build de teste do e2e '.repeat(4096).length);
+      expect(Number(arquivo.headers['content-length'])).toBe('build de teste do e2e '.repeat(4096).length + 4);
 
       await api().get(`/api/player/tests/${testId}/build/file`).set('Authorization', `Bearer ${tester}`).set('Range', 'bytes=0-9').expect(206);
     });
@@ -728,7 +736,7 @@ describe('OrbitPlay API (e2e)', () => {
           participationId,
           answers: { 'q-lista': 'Opala', 'q-grade': ['Terra: Ótima', 'Asfalto: Ruim'], 'q-print': PNG, 'q-texto': 'A curva do túnel é ótima.' },
           bugsReported: 0,
-          durationSeconds: 600,
+          durationSeconds: 30,
           formSeconds: 90,
         })
         .expect(201);

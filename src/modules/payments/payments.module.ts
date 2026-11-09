@@ -16,7 +16,12 @@ import { PaymentsService } from './payments.service';
       inject: [ConfigService],
       useFactory: (config: ConfigService): PaymentGateway => {
         const provedor = config.getOrThrow<string>('payments.provider');
-        if (provedor === 'sandbox') return new SandboxGateway();
+        if (provedor === 'sandbox') {
+          return new SandboxGateway(
+            config.getOrThrow<string>('payments.webhookSecret'),
+            config.getOrThrow<number>('payments.webhookToleranceSeconds'),
+          );
+        }
         throw new Error(`Gateway de pagamento "${provedor}" não implementado.`);
       },
     },
