@@ -51,6 +51,8 @@ export class UsersService {
       avatarUrl: user.avatarUrl ?? undefined,
       locale: user.locale,
       createdAt: user.createdAt.toISOString(),
+      emailNotifications: user.emailNotifications,
+      mfaEnabled: user.mfaEnabled,
     };
 
     if (user.role === 'STUDIO') {
@@ -66,6 +68,9 @@ export class UsersService {
           website: user.studio.website ?? undefined,
           totalGames: user.studio._count.games,
           balance: user.studio.balanceCents,
+          jobTitle: user.jobTitle ?? undefined,
+          birthDate: user.birthDate?.toISOString().slice(0, 10),
+          location: (user.location ?? undefined) as TestLocation | undefined,
         },
       };
     }

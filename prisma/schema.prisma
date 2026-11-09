@@ -155,10 +155,25 @@ model User {
   /// Falhas de login seguidas; zera no acerto. Com `lockedUntil`, barra a força bruta.
   failedLoginCount    Int               @default(0)
   lockedUntil         DateTime?
+  /// "Li e aceito os Termos de Uso e a Política de Privacidade" do cadastro. Conta de convite fica nula.
+  termsAcceptedAt     DateTime?
+  /// "Quero receber novidades, conteúdos e atualizações da OrbitPlay." Começa desligado.
+  marketingOptIn      Boolean           @default(false)
+  /// "Notificações via E-mail" da Minha conta.
+  emailNotifications  Boolean           @default(true)
+  /// "MFA por E-mail": o login com senha certa ainda pede o código de 6 dígitos.
+  mfaEnabled          Boolean           @default(false)
+  /// "Cargo / função" da Minha conta do estúdio.
+  jobTitle            String?
+  /// Estúdio: data de nascimento e país da pessoa. O jogador guarda os dois no `PlayerProfile` (elegibilidade).
+  birthDate           DateTime?
+  location            String?
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
 
   player           PlayerProfile?
+  /// Cadastro esperando o código do e-mail ("Verifique seu e-mail"). Some quando a conta é confirmada.
+  emailVerification EmailVerification?
   participations   Participation[]
   messages         ChatMessage[]
   reactions        MessageReaction[]
@@ -238,6 +253,20 @@ model PlayerProfile {
   archetype           String    @default("EXPLORER")
   /// Viu o tutorial do teste — da segunda vez o modal final mostra "Rever tutorial" (Figma `224:7540`).
   tutorialSeenAt      DateTime?
+}
+
+/// Código de 6 dígitos por e-mail, um aberto por conta. SIGNUP: o cadastro fica PENDING até
+/// confirmar ("Verifique seu e-mail"). LOGIN: segundo passo do login com "MFA por E-mail".
+model EmailVerification {
+  userId    String   @id
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purpose   String   @default("SIGNUP")
+  /// Só o hash fica no banco; o código em si vai no e-mail.
+  codeHash  String
+  expiresAt DateTime
+  /// Tentativas erradas deste código; no limite, só um código novo resolve.
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
 }
 
 model PasswordResetToken {

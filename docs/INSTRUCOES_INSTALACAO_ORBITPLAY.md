@@ -28,7 +28,7 @@ npm run build                # web (CSP estrita de produção em dist/index.html
 Electron: use os scripts já existentes do projeto. Se você usa `publish-local`, rode-o de novo: o `latest.json` agora leva `sha256`. **Teste o Electron manualmente** (download, abrir jogo, atualização), pois não foi executado na auditoria.
 
 ## Produção (checklist)
-`NODE_ENV=production`; `JWT_SECRET` forte; `PAYMENT_PROVIDER` real + `PAYMENT_WEBHOOK_SECRET`; `PUBLIC_API_URL` e `APP_URL` https; `CORS_ORIGINS` exato; `TRUST_PROXY_HOPS` conforme o proxy; SMTP configurado em `MailService`; Postgres com TLS; `STORAGE_DIR` persistente e com backup; nunca rodar o seed. Sem isso a API se recusa a subir e diz o motivo.
+`NODE_ENV=production`; `JWT_SECRET` forte; `PAYMENT_PROVIDER` real + `PAYMENT_WEBHOOK_SECRET`; `PUBLIC_API_URL` e `APP_URL` https; `CORS_ORIGINS` exato; `TRUST_PROXY_HOPS` conforme o proxy; `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` e `MAIL_FROM` de um SMTP real; Postgres com TLS; `STORAGE_DIR` persistente e com backup; nunca rodar o seed. Sem isso a API se recusa a subir e diz o motivo.
 
 ## Atenção ao atualizar
 Tokens emitidos antes desta versão deixam de valer (nova audiência/emissor): todos precisam logar de novo. O app antigo, que manda o token do chat na URL do WebSocket, não conecta mais; use o app desta entrega.

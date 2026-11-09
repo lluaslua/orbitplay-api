@@ -43,6 +43,9 @@ export default () => {
     if (!process.env.APP_URL?.startsWith('https://') && process.env.ALLOW_INSECURE_APP_URL !== 'true') {
       problemas.push('APP_URL precisa ser https:// em produção (o link de redefinição de senha usa).');
     }
+    if (!process.env.SMTP_HOST || !process.env.MAIL_FROM) {
+      problemas.push('SMTP_HOST e MAIL_FROM são obrigatórios em produção: sem e-mail ninguém confirma o cadastro nem recupera a senha.');
+    }
     if (problemas.length) throw new Error(`Configuração insegura para produção:\n - ${problemas.join('\n - ')}`);
   } else if (secret.length < 32) {
     // eslint-disable-next-line no-console
@@ -89,6 +92,16 @@ export default () => {
       /** Segredo HMAC do webhook do provedor (obrigatório para o webhook ser aceito). */
       webhookSecret: process.env.PAYMENT_WEBHOOK_SECRET ?? '',
       webhookToleranceSeconds: inteiro('PAYMENT_WEBHOOK_TOLERANCE_SECONDS', 300),
+    },
+    /** Envio de e-mail por SMTP. Sem `SMTP_HOST`, em desenvolvimento o e-mail sai só no log. */
+    mail: {
+      host: process.env.SMTP_HOST ?? '',
+      port: inteiro('SMTP_PORT', 587),
+      /** true na porta 465 (TLS direto); na 587 o TLS vem pelo STARTTLS. */
+      secure: process.env.SMTP_SECURE === 'true',
+      user: process.env.SMTP_USER ?? '',
+      pass: process.env.SMTP_PASS ?? '',
+      from: process.env.MAIL_FROM ?? '',
     },
   };
 };

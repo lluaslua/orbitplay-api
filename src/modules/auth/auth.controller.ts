@@ -3,12 +3,14 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 import type { RequestUser } from '../../common/interfaces/jwt-payload.interface';
 import { RateLimit } from '../../common/security/rate-limit.guard';
-import type { AuthSession, AuthUser } from '../../contracts';
+import type { AuthSession, AuthUser, LoginResult, RegisterResult } from '../../contracts';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RecoverPasswordDto } from './dto/recover-password.dto';
 import { RegisterDto } from './dto/register.dto';
+import { ResendCodeDto } from './dto/resend-code.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { VerifyEmailDto, VerifyLoginDto } from './dto/verify-email.dto';
 
 const MINUTO = 60_000;
 const HORA = 60 * MINUTO;
@@ -22,15 +24,41 @@ export class AuthController {
   @RateLimit({ limit: 10, windowMs: MINUTO, by: 'ip+email' })
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  login(@Body() dto: LoginDto, @Ip() ip: string): Promise<AuthSession> {
+  login(@Body() dto: LoginDto, @Ip() ip: string): Promise<LoginResult> {
     return this.auth.login(dto, ip);
   }
 
   @Public()
   @RateLimit({ limit: 10, windowMs: HORA })
   @Post('register')
-  register(@Body() dto: RegisterDto): Promise<AuthSession> {
+  register(@Body() dto: RegisterDto): Promise<RegisterResult> {
     return this.auth.register(dto);
+  }
+
+  /** "Verifique seu e-mail". Além do limite da rota, cada código aguenta poucas tentativas erradas. */
+  @Public()
+  @RateLimit({ limit: 10, windowMs: HORA, by: 'ip+email' })
+  @Post('verify-email')
+  @HttpCode(HttpStatus.OK)
+  verifyEmail(@Body() dto: VerifyEmailDto): Promise<AuthSession> {
+    return this.auth.verifyEmail(dto);
+  }
+
+  /** Segundo passo do login com "MFA por E-mail". */
+  @Public()
+  @RateLimit({ limit: 10, windowMs: HORA, by: 'ip+email' })
+  @Post('verify-login')
+  @HttpCode(HttpStatus.OK)
+  verifyLogin(@Body() dto: VerifyLoginDto): Promise<AuthSession> {
+    return this.auth.verifyLogin(dto);
+  }
+
+  @Public()
+  @RateLimit({ limit: 5, windowMs: HORA, by: 'ip+email' })
+  @Post('resend-code')
+  @HttpCode(HttpStatus.OK)
+  resendCode(@Body() dto: ResendCodeDto): Promise<{ message: string }> {
+    return this.auth.resendCode(dto);
   }
 
   @Get('me')

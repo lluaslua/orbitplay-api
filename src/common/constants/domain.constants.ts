@@ -344,3 +344,9 @@ export const WITHDRAWAL_DAILY_LIMIT_CENTS = 100_000;
 
 /** Validade do link de redefinição de senha. */
 export const RESET_TOKEN_TTL_MINUTES = 60;
+
+/** Validade do código de 6 dígitos do cadastro ("O código expira em 10 minutos."). */
+export const EMAIL_CODE_TTL_MINUTES = 10;
+
+/** Tentativas erradas que um código aguenta antes de exigir um novo. */
+export const EMAIL_CODE_MAX_ATTEMPTS = 5;

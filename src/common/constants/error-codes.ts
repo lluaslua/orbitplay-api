@@ -17,6 +17,10 @@ export const ErrorCode = {
   ACCOUNT_PENDING: 'ACCOUNT_PENDING',
   EMAIL_TAKEN: 'EMAIL_TAKEN',
   INVALID_RESET_TOKEN: 'INVALID_RESET_TOKEN',
+  /** Cadastro: código de verificação errado, vencido ou já sem tentativas. */
+  INVALID_VERIFICATION_CODE: 'INVALID_VERIFICATION_CODE',
+  /** Login de cadastro que ainda não confirmou o e-mail: o app abre "Verifique seu e-mail". */
+  EMAIL_NOT_VERIFIED: 'EMAIL_NOT_VERIFIED',
   LAST_OWNER: 'LAST_OWNER',
   ROLE_NOT_ALLOWED: 'ROLE_NOT_ALLOWED',
 

@@ -21,7 +21,7 @@ Ver `RELATORIO_AUDITORIA_ORBITPLAY.md` (18 itens com criticidade e evidência).
 Todas as listadas nas seções abaixo; cada uma tem teste em `test/security.e2e-spec.ts` ou nos testes do app, exceto onde indicado.
 
 ## 7. Política de autenticação
-✅ Login por e-mail+senha+aba (papel). ✅ Conta inativa/pendente não entra. ✅ Bloqueio por 5 falhas seguidas durante 15 min (`LOGIN_MAX_FAILURES`, `LOGIN_LOCK_MINUTES`); contador em memória cobre também e-mails inexistentes, então a resposta (401 e depois 429) é igual. ✅ Limite de 10 tentativas/min por IP+e-mail. ✅ Recuperação de senha: resposta idêntica, envio em segundo plano, link de 60 min, uso único, pedido novo cancela os anteriores, redefinir invalida sessões. 🔭 MFA para OWNER/ADMIN. ⚙️ SMTP.
+✅ Login por e-mail+senha+aba (papel). ✅ Conta inativa/pendente não entra. ✅ Bloqueio por 5 falhas seguidas durante 15 min (`LOGIN_MAX_FAILURES`, `LOGIN_LOCK_MINUTES`); contador em memória cobre também e-mails inexistentes, então a resposta (401 e depois 429) é igual. ✅ Limite de 10 tentativas/min por IP+e-mail. ✅ Recuperação de senha: resposta idêntica, envio em segundo plano, link de 60 min, uso único, pedido novo cancela os anteriores, redefinir invalida sessões. ✅ Cadastro só entra depois do código de 6 dígitos do e-mail (10 min, 5 tentativas, hash no banco). ✅ "MFA por E-mail" opcional na Minha conta: o login com senha certa pede o código. 🔭 MFA obrigatório para OWNER/ADMIN. ⚙️ SMTP (`SMTP_HOST`, obrigatório em produção).
 Nota: o cadastro ainda responde 409 para e-mail já usado (enumeração aceita por UX; mitigada por 10 cadastros/hora/IP).
 
 ## 8. Autorização e permissões

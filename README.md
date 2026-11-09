@@ -69,7 +69,7 @@ O critério foi: o que resolve agora, sem custo, e pode ser trocado depois sem m
 | Banco | PostgreSQL + Prisma | — |
 | Arquivos (builds, gravações, capas) | Disco local, `STORAGE_DIR` (`StorageService`) | S3 ou Azure Blob — troca a classe |
 | Pagamento | Gateway `sandbox`, aprova na hora (`PaymentGateway`) | Mercado Pago/Pagar.me/Stripe, com webhook assinado |
-| E-mail (recuperação, convite) | Sai no log da API (`MailService`) | SMTP/SES — **antes de produção** |
+| E-mail (código do cadastro e do MFA, recuperação, convite) | SMTP de verdade com `SMTP_HOST` no .env; sem ele, sai no log da API (`MailService`) | Obrigatório em produção: a API não sobe sem `SMTP_HOST` e `MAIL_FROM` |
 | Análise da sessão | Heurística local (`AnalysisService`) | Whisper + LLM, atrás de uma fila (Redis/RabbitMQ) |
 | Chat | Polling de 5 s, como o app já faz | WebSocket |
 
@@ -122,8 +122,8 @@ Tudo sob `/api`. Listas aceitam `?page=&pageSize=` e devolvem o total no cabeça
 
 | Área | Rotas | Quem |
 | --- | --- | --- |
-| Auth | `POST auth/login` · `auth/register` · `auth/logout` · `auth/recover` · `auth/reset-password` · `GET auth/me` | público / logado |
-| Minha conta | `PATCH me` (nome, idioma) · `POST me/avatar` · `POST me/password` | logado |
+| Auth | `POST auth/login` · `auth/register` · `auth/verify-email` · `auth/verify-login` · `auth/resend-code` · `auth/logout` · `auth/recover` · `auth/reset-password` · `GET auth/me` | público / logado |
+| Minha conta | `PATCH me` (nome, idioma, nascimento, país, cargo, estúdio, notificações, MFA) · `POST me/avatar` · `POST me/password` | logado |
 | Jogos | `GET games` (`?search=` e, para o jogador, `?tab=POPULAR\|TOP_PAYING\|NEW\|ELITE\|COMMUNITIES`) · `GET games/options` · `GET games/:id` · `POST games` ⟳ · `PATCH games/:id` · `DELETE games/:id` · `POST games/:id/images/:banner\|thumbnail\|logo` · `POST games/:id/finish-setup` | leitura: todos · escrita: estúdio com a permissão no jogo |
 | Jogo, visão do estúdio | `GET games/:id/my-access` · `GET games/:id/reviews` · `GET/POST games/:id/achievements` · `PATCH/DELETE …/achievements/:id` · `GET/PUT games/:id/access` | estúdio |
 | Equipe | `GET studio/members?search=@` · `POST studio/members` ⟳ · `PATCH/DELETE studio/members/:id` · `GET/POST studio/groups` · `PATCH/DELETE studio/groups/:id` · `PUT studio/groups/:id/members` | leitura: estúdio · escrita: MANAGE |

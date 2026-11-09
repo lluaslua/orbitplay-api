@@ -21,6 +21,10 @@ export interface BaseUser {
   /** Idioma da interface — o seletor "PT" da navbar. */
   locale: string;
   createdAt: string;
+  /** Minha conta: "Notificações via E-mail". */
+  emailNotifications: boolean;
+  /** Minha conta: "MFA por E-mail" — o login pede o código do e-mail. */
+  mfaEnabled: boolean;
 }
 
 export interface StudioProfile {
@@ -32,6 +36,10 @@ export interface StudioProfile {
   website?: string;
   totalGames: number;
   balance: number;
+  /** Minha conta: dados da pessoa ("Cargo / função", nascimento e país). */
+  jobTitle?: string;
+  birthDate?: string;
+  location?: TestLocation;
 }
 
 export interface PlayerProfile {
@@ -83,6 +91,22 @@ export interface LoginCredentials {
   remember?: boolean;
 }
 
+/** Login de conta com "MFA por E-mail": a senha conferiu e o código foi para o e-mail. */
+export interface MfaChallenge {
+  mfaRequired: true;
+  email: string;
+}
+
+/** `POST /auth/login` devolve a sessão, ou o desafio do MFA quando a conta o ligou. */
+export type LoginResult = AuthSession | MfaChallenge;
+
+/** Segundo passo do login com MFA. `remember` é o "Lembrar login" do primeiro passo. */
+export interface VerifyLoginPayload {
+  email: string;
+  code: string;
+  remember?: boolean;
+}
+
 export interface AuthSession {
   token: string;
   user: AuthUser;
@@ -104,12 +128,45 @@ export interface RegisterPayload {
   location?: TestLocation;
   playerType?: PlayerTypeId;
   archetype?: ArchetypeId;
+  /** "Li e aceito os Termos de Uso e a Política de Privacidade": sem `true` não há conta. */
+  acceptTerms: boolean;
+  /** "Quero receber novidades, conteúdos e atualizações da OrbitPlay." */
+  marketingOptIn?: boolean;
+}
+
+/**
+ * Resposta do cadastro: a conta nasce PENDING e o código de 6 dígitos vai
+ * para este e-mail. A sessão só sai em `POST /auth/verify-email`.
+ */
+export interface RegisterResult {
+  email: string;
+}
+
+/** "Verifique seu e-mail": o código que chegou. Acertou, devolve a `AuthSession`. */
+export interface VerifyEmailPayload {
+  email: string;
+  code: string;
+}
+
+/** "Reenviar código": troca o código aberto por um novo, com prazo novo. */
+export interface ResendCodePayload {
+  email: string;
 }
 
 /** Perfil da própria conta: nome e idioma. A foto vai por `POST /me/avatar`. */
 export interface UpdateMePayload {
   name?: string;
   locale?: string;
+  /** Minha conta, os dois perfis. No jogador, nascimento e país mudam a elegibilidade dos testes. */
+  birthDate?: string;
+  location?: TestLocation;
+  emailNotifications?: boolean;
+  mfaEnabled?: boolean;
+  /** Só estúdio. */
+  jobTitle?: string;
+  /** Só estúdio com permissão MANAGE: "Nome do Estúdio" e "Site". Site vazio apaga. */
+  organization?: string;
+  website?: string;
 }
 
 /** Troca de senha logado: pede a atual e derruba as outras sessões. */

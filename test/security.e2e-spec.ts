@@ -11,6 +11,10 @@ import { assertPlausibleEvents } from '../src/common/security/telemetry-limits';
 import { assinaturaConfere } from '../src/common/storage/upload-filters';
 import { verifyWebhookSignature } from '../src/modules/payments/payment-gateway';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { cadastrar } from './cadastro';
+
+// Nada de e-mail real nos testes: sem SMTP o MailService manda para o log (o .env não sobrescreve).
+process.env.SMTP_HOST = '';
 
 const SENHA_BOA = 'Orbit#Teste-2026';
 const PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
@@ -47,18 +51,10 @@ describe('Segurança da API (e2e)', () => {
       login('player@orbitplay.com', 'PLAYER'),
     ]);
     jogador2 = (
-      await api()
-        .post('/api/auth/register')
-        .send({ role: 'PLAYER', name: 'Outro', email: `j2-${Date.now()}@teste.orbitplay.com`, password: SENHA_BOA, birthDate: '2000-01-01', location: 'BRASIL' })
-        .expect(201)
-    ).body.token;
+      await cadastrar(app, { role: 'PLAYER', name: 'Outro', email: `j2-${Date.now()}@teste.orbitplay.com`, password: SENHA_BOA, birthDate: '2000-01-01', location: 'BRASIL' })
+    ).token;
     const email = `estudio-b-${Date.now()}@teste.orbitplay.com`;
-    estudioB = (
-      await api()
-        .post('/api/auth/register')
-        .send({ role: 'STUDIO', name: 'Bruno', email, password: SENHA_BOA, organization: 'Estúdio B' })
-        .expect(201)
-    ).body.token;
+    estudioB = (await cadastrar(app, { role: 'STUDIO', name: 'Bruno', email, password: SENHA_BOA, organization: 'Estúdio B' })).token;
     gameA = (await api().get('/api/games').set(auth(estudioA)).expect(200)).body[0].id;
   });
 
@@ -110,10 +106,7 @@ describe('Segurança da API (e2e)', () => {
 
     it('troca de senha invalida os tokens anteriores', async () => {
       const email = `troca-${Date.now()}@teste.orbitplay.com`;
-      const { body } = await api()
-        .post('/api/auth/register')
-        .send({ role: 'PLAYER', name: 'Troca', email, password: SENHA_BOA, birthDate: '2000-01-01', location: 'BRASIL' })
-        .expect(201);
+      const body = await cadastrar(app, { role: 'PLAYER', name: 'Troca', email, password: SENHA_BOA, birthDate: '2000-01-01', location: 'BRASIL' });
       await new Promise((r) => setTimeout(r, 1100));
       await api().post('/api/me/password').set(auth(body.token)).send({ currentPassword: SENHA_BOA, newPassword: 'Outra#Senha-2027' }).expect(200);
       await api().get('/api/auth/me').set(auth(body.token)).expect(401);
@@ -128,7 +121,7 @@ describe('Segurança da API (e2e)', () => {
 
   describe('Senhas', () => {
     it('recusa senha fraca, comum ou longa demais no cadastro', async () => {
-      const base = { role: 'PLAYER', name: 'Fraca', birthDate: '2000-01-01', location: 'BRASIL' };
+      const base = { role: 'PLAYER', name: 'Fraca', birthDate: '2000-01-01', location: 'BRASIL', acceptTerms: true };
       for (const password of ['curta1', '12345678', 'somenteletras', 'password', 'a'.repeat(80) + '1']) {
         await api().post('/api/auth/register').send({ ...base, email: `f-${Date.now()}@t.com`, password }).expect(400);
       }
@@ -152,13 +145,13 @@ describe('Segurança da API (e2e)', () => {
       const email = `ma-${Date.now()}@teste.orbitplay.com`;
       await api()
         .post('/api/auth/register')
-        .send({ role: 'OWNER', name: 'X', email, password: SENHA_BOA })
+        .send({ role: 'OWNER', name: 'X', email, password: SENHA_BOA, acceptTerms: true })
         .expect(400);
 
       const { body } = await api()
         .post('/api/auth/register')
         .send({
-          role: 'PLAYER', name: 'Mass', email, password: SENHA_BOA, birthDate: '2000-01-01', location: 'BRASIL',
+          role: 'PLAYER', name: 'Mass', email, password: SENHA_BOA, birthDate: '2000-01-01', location: 'BRASIL', acceptTerms: true,
           status: 'ACTIVE', studioPermission: 'MANAGE', teamPermissions: ['MANAGE_USERS'], balanceCents: 999999, xp: 99999, id: 'studio-001',
         })
         .expect(201);
@@ -167,7 +160,9 @@ describe('Segurança da API (e2e)', () => {
       expect(user.studioPermission).toBeNull();
       expect(user.teamPermissions).toEqual([]);
       expect(user.id).not.toBe('studio-001');
-      expect(body.user.role).toBe('PLAYER');
+      // `status: 'ACTIVE'` no corpo não pula a verificação do e-mail.
+      expect(user.status).toBe('PENDING');
+      expect(body).toEqual({ email });
       expect(user.player?.balanceCents ?? 0).toBe(0);
     });
 
